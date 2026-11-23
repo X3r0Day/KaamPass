@@ -104,8 +104,21 @@ nav,
   margin-top: 3px;
 }
 @media (max-width: 430px) {
+  .mast .bar {
+    gap: 6px;
+  }
+  .mast .brand {
+    gap: 6px;
+    font-size: 20px;
+  }
+  .mast .brand svg {
+    width: 29px;
+    height: 29px;
+  }
   .mast nav {
     gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
   .mast .lang,
   .mast .headerLink {
