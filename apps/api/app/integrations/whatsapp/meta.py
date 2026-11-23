@@ -31,6 +31,8 @@ class Config:
 
 @lru_cache
 def config() -> Config | None:
+    if os.getenv("WHATSAPP_ENABLED", "").lower() != "true":
+        return None
     values = [
         os.getenv(f"WHATSAPP_{k}", "")
         for k in ("PHONE_NUMBER_ID", "APP_SECRET", "ACCESS_TOKEN", "VERIFY_TOKEN")

@@ -21,9 +21,11 @@ export default async function Layout({
 }) {
   const lang = (await cookies()).get("kp-lang")?.value === "hi" ? "hi" : "en";
   const number = process.env.WHATSAPP_PUBLIC_NUMBER?.trim() || "";
-  const whatsapp = /^[1-9]\d{7,14}$/.test(number)
-    ? `https://wa.me/${number}?text=Hi`
-    : "";
+  const whatsapp =
+    process.env.WHATSAPP_ENABLED?.toLowerCase() === "true" &&
+    /^[1-9]\d{7,14}$/.test(number)
+      ? `https://wa.me/${number}?text=Hi`
+      : "";
   const phoneAuth =
     (
       process.env.WEB_PHONE_AUTH_ENABLED ??

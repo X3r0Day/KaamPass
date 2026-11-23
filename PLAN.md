@@ -1,6 +1,6 @@
 # Hyperlocal Job Matching — website launch plan
 
-> **WhatsApp release update:** Website SMS is off for this rollout. The WhatsApp Cloud API bot registers workers and employers by text or voice, reads back the extracted details, and creates the profile only after the native **Yes** button. Google transcribes voice notes; Token Harbor's free DeepSeek V4.1 Flash extracts fields and interprets questions. Guided text does not use those AI providers. The shared backend supplies matching, applications, availability, and employer job posting. See [WhatsApp setup](README.md#run-the-whatsapp-bot). Keypad/IVR remains future work.
+> **Current rollout:** Website SMS is off. WhatsApp is visible in the menu but paused while the Meta account is being verified. Once switched on, the Cloud API bot registers workers and employers by text or voice and creates the profile only after the native **Yes** button. Google transcribes voice notes; Token Harbor's free DeepSeek V4.1 Flash extracts fields and interprets questions. Guided text does not use those AI providers. See [WhatsApp setup](README.md#run-the-whatsapp-bot). Keypad/IVR remains future work.
 
 **Release goal:** A daily-wage worker in a non-metro town can hear about nearby work, apply, or make themselves available to local hirers. A small shop or contractor can post a one-day shift, a longer short-term job, or a permanent opening. Both can do this on the production website in Hindi or English, with real phone authentication and a durable hiring record.
 

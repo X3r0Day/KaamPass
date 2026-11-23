@@ -220,6 +220,24 @@ def test_whatsapp_only_requires_no_firebase_credentials(monkeypatch):
         settings.cache_clear()
 
 
+def test_paused_whatsapp_does_not_accept_callbacks_even_with_credentials(monkeypatch):
+    for name, value in {
+        "ENABLED": "false",
+        "PHONE_NUMBER_ID": CFG.number,
+        "APP_SECRET": CFG.secret,
+        "ACCESS_TOKEN": CFG.token,
+        "VERIFY_TOKEN": CFG.verify_token,
+    }.items():
+        monkeypatch.setenv("WHATSAPP_" + name, value)
+    meta.config.cache_clear()
+    try:
+        with TestClient(app, base_url="https://localhost") as client:
+            assert client.get("/api/whatsapp/webhook").status_code == 404
+            assert client.post("/api/whatsapp/webhook", json={}).status_code == 404
+    finally:
+        meta.config.cache_clear()
+
+
 def test_verified_whatsapp_and_website_can_link_one_public_id(db):
     phone = "+919876500099"
     web = Actor("test-firebase-subject", phone)

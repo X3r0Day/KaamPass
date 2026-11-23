@@ -55,6 +55,8 @@ npm run contract --prefix apps/web
 
 ## Run the WhatsApp bot
 
+**Paused for the current deployment.** The WhatsApp menu entry stays visible, but it does not open a conversation and the webhook is disabled. Leave `WHATSAPP_ENABLED=false` until the Meta number is verified and the webhook is ready.
+
 No website OTP or Firebase credentials are needed in WhatsApp-only mode:
 
 1. In Meta, create a WhatsApp Cloud API business app and connect a WhatsApp Business number. Set a Meta token with `whatsapp_business_messaging` access to that number. On a test number, add the recipients you will actually test with.
@@ -62,6 +64,7 @@ No website OTP or Firebase credentials are needed in WhatsApp-only mode:
 
    | Variable | What goes here |
    |---|---|
+   | `WHATSAPP_ENABLED` | Set `true` in both services to turn on the bot and its menu link. Defaults to off |
    | `WHATSAPP_PHONE_NUMBER_ID` | Meta's internal number ID from API Setup; **not** the dialable number |
    | `WHATSAPP_ACCESS_TOKEN` | Cloud API access token; use a suitable system-user token for a continuing deployment |
    | `WHATSAPP_APP_SECRET` | Meta application secret used to verify signed webhook bodies |

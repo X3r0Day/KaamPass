@@ -107,6 +107,8 @@ test("two phone accounts hire for a shift and a permanent opening",async({browse
 test("Hindi on a shared screen fits 360px and mic denial preserves the draft",async({page,context})=>{
   await page.setViewportSize({width:360,height:780});
   await page.goto(baseURL);
+  await expect(page.getByRole("link", { name: "WhatsApp (temporarily unavailable)" })).toHaveAttribute("aria-disabled", "true");
+  await expect(page.locator('a[href^="https://wa.me/"]')).toHaveCount(0);
   await page.getByRole("button",{name:"हिन्दी"}).click();
   await expect(page.locator(".placeTag")).toContainText("गाज़ियाबाद");
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

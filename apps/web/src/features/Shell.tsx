@@ -44,7 +44,7 @@ function Mark() {
   );
 }
 function Chrome({ children }: { children: ReactNode }) {
-  const { lang, setLang, t, say, phoneAuth } = useWords();
+  const { lang, setLang, t, say, phoneAuth, whatsapp } = useWords();
   const path = usePathname();
   return (
     <>
@@ -66,6 +66,23 @@ function Chrome({ children }: { children: ReactNode }) {
               <Link className="headerLink" href="/login">
                 {t("signin")}
               </Link>
+            )}
+            {whatsapp ? (
+              <a className="headerLink" href={whatsapp}>
+                WhatsApp
+              </a>
+            ) : (
+              <span
+                className="menuPaused"
+                role="link"
+                aria-disabled="true"
+                aria-label={say(
+                  "WhatsApp (temporarily unavailable)",
+                  "WhatsApp (फ़िलहाल उपलब्ध नहीं)",
+                )}
+              >
+                WhatsApp <span aria-hidden="true">{say("Paused", "बंद")}</span>
+              </span>
             )}
           </nav>
         </div>

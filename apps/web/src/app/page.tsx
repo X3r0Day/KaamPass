@@ -40,6 +40,14 @@ export default function Home() {
                 </Link>
               </>
             )}
+            {!phoneAuth && !whatsapp && (
+              <p className="notice">
+                {say(
+                  "Registration is not open yet.",
+                  "पंजीकरण अभी शुरू नहीं हुआ है।",
+                )}
+              </p>
+            )}
           </div>
         </section>
         <figure className="print">
@@ -56,15 +64,20 @@ export default function Home() {
           {[
             [
               say("Start with your number", "मोबाइल नंबर से शुरू करें"),
-              !phoneAuth
+              !phoneAuth && whatsapp
                 ? say(
                     "Open KaamPaas on WhatsApp to get started.",
                     "शुरू करने के लिए WhatsApp पर KaamPaas खोलें।",
                   )
-                : say(
-                    "Receive an SMS code. A shared browser works too.",
-                    "SMS कोड पाएं। साझा कंप्यूटर का भी उपयोग कर सकते हैं।",
-                  ),
+                : phoneAuth
+                  ? say(
+                      "Receive an SMS code. A shared browser works too.",
+                      "SMS कोड पाएं। साझा कंप्यूटर का भी उपयोग कर सकते हैं।",
+                    )
+                  : say(
+                      "Phone registration will open here once it is ready.",
+                      "मोबाइल से पंजीकरण शुरू होने पर यहाँ उपलब्ध होगा।",
+                    ),
             ],
             [
               say("Choose your work area", "काम का इलाका चुनें"),

@@ -32,12 +32,21 @@ export function Account({
   if (!phoneAuth)
     body = (
       <div className="stack">
-        <h1>{say("Start on WhatsApp", "WhatsApp पर शुरू करें")}</h1>
+        <h1>
+          {whatsapp
+            ? say("Start on WhatsApp", "WhatsApp पर शुरू करें")
+            : say("Registration isn’t open yet", "पंजीकरण अभी शुरू नहीं हुआ है")}
+        </h1>
         <p>
-          {say(
-            "Website SMS sign-in is not enabled. You can register and look for local jobs in the WhatsApp chat.",
-            "वेबसाइट पर SMS साइन इन अभी चालू नहीं है। WhatsApp चैट में पंजीकरण और काम की खोज करें।",
-          )}
+          {whatsapp
+            ? say(
+                "Website SMS sign-in is not enabled. You can register and look for local jobs in the WhatsApp chat.",
+                "वेबसाइट पर SMS साइन इन अभी चालू नहीं है। WhatsApp चैट में पंजीकरण और काम की खोज करें।",
+              )
+            : say(
+                "WhatsApp is temporarily unavailable, and website SMS sign-in is off.",
+                "WhatsApp फ़िलहाल उपलब्ध नहीं है और वेबसाइट पर SMS साइन इन बंद है।",
+              )}
         </p>
         {whatsapp && (
           <a className="btn primary" href={whatsapp}>
