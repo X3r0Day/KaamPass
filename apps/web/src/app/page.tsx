@@ -42,7 +42,7 @@ export default function Home() {
             )}
             {!phoneAuth && !whatsapp && (
               <>
-                <p className="hint">{say("No SMS required during the hackathon.", "हैकाथॉन के दौरान SMS की ज़रूरत नहीं है।")}</p>
+                <p className="hint">{say("No SMS required.", "SMS की ज़रूरत नहीं है।")}</p>
               </>
             )}
           </div>
@@ -71,7 +71,7 @@ export default function Home() {
                       "Receive an SMS code. A shared browser works too.",
                       "SMS कोड पाएं। साझा कंप्यूटर का भी उपयोग कर सकते हैं।",
                     )
-                  : say("Use a six-digit code to set up a profile during the hackathon.", "हैकाथॉन के दौरान छह अंकों के कोड से प्रोफ़ाइल बनाएँ।"),
+                  : say("Enter a six-digit code, then set up your profile.", "छह अंकों का कोड भरें, फिर अपनी प्रोफ़ाइल बनाएँ।"),
             ],
             [
               say("Choose your work area", "काम का इलाका चुनें"),
