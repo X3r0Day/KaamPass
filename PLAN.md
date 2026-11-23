@@ -1,5 +1,7 @@
 # Hyperlocal Job Matching — website launch plan
 
+> **WhatsApp release update:** Website SMS is off for this rollout. The WhatsApp Cloud API bot registers workers and employers by text or voice, reads back the extracted details, and creates the profile only after the native **Yes** button. Google transcribes voice notes; Token Harbor's free DeepSeek V4.1 Flash extracts fields and interprets questions. Guided text does not use those AI providers. The shared backend supplies matching, applications, availability, and employer job posting. See [WhatsApp setup](README.md#run-the-whatsapp-bot). Keypad/IVR remains future work.
+
 **Release goal:** A daily-wage worker in a non-metro town can hear about nearby work, apply, or make themselves available to local hirers. A small shop or contractor can post a one-day shift, a longer short-term job, or a permanent opening. Both can do this on the production website in Hindi or English, with real phone authentication and a durable hiring record.
 
 **Website release:** Use a web browser; the SMS code can arrive on a separate basic phone, so a shared computer works. **Future release:** Dial one number on a feature phone and use its keypad, without a browser, mobile data, or previous website registration. Section 8 maps that future service to the website's capabilities. Do not publish a call button or claim that calls work at launch.
@@ -14,7 +16,7 @@
 | A **voice-enabled, localized job board** through a simple web UI | Workers can speak a trade and listen to job summaries; employers can dictate a description and review the posting aloud. Deliver the critical journey in Hindi and English. | The same job can be posted and understood using voice, or using only text and buttons when the mic is unavailable. |
 | Let a worker **open themselves to hirers** | Give workers an explicit availability control and employers a shortlist tied to their own open job. | A worker appears when they opt in, can receive an invitation, and disappears from new shortlists when they pause. |
 
-The project directory was empty at planning time. Build one FastAPI backend. Website integration is the entire first release; telephony, WhatsApp, payments, in-app chat, and an admin panel are outside it.
+The project directory was empty at planning time. Both channels use one FastAPI backend. The sections below describe the website design; the WhatsApp update controls the current rollout. Keypad telephony, payments, in-app chat, and an admin panel remain out of scope.
 
 ## 1. What people can do
 

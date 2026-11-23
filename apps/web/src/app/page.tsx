@@ -5,7 +5,7 @@ import { MarketPrint } from "@/features/MarketPrint";
 import { pilot } from "@/content/pilot";
 
 export default function Home() {
-  const { t, say, lang } = useWords();
+  const { t, say, lang, whatsapp, phoneAuth } = useWords();
   return (
     <div className="wrap landing">
       <div className="hero">
@@ -22,12 +22,24 @@ export default function Home() {
             )}
           </p>
           <div className="actions">
-            <Link className="btn primary" href="/login?role=worker">
-              {t("find")}
-            </Link>
-            <Link className="btn light" href="/login?role=employer">
-              {t("post")}
-            </Link>
+            {whatsapp && (
+              <a className="btn primary" href={whatsapp}>
+                {say("Start on WhatsApp", "WhatsApp पर शुरू करें")}
+              </a>
+            )}
+            {phoneAuth && (
+              <>
+                <Link
+                  className={`btn ${whatsapp ? "light" : "primary"}`}
+                  href="/login?role=worker"
+                >
+                  {t("find")}
+                </Link>
+                <Link className="btn light" href="/login?role=employer">
+                  {t("post")}
+                </Link>
+              </>
+            )}
           </div>
         </section>
         <figure className="print">
@@ -44,10 +56,15 @@ export default function Home() {
           {[
             [
               say("Start with your number", "मोबाइल नंबर से शुरू करें"),
-              say(
-                "Receive an SMS code. A shared browser works too.",
-                "SMS कोड पाएं। साझा कंप्यूटर का भी उपयोग कर सकते हैं।",
-              ),
+              !phoneAuth
+                ? say(
+                    "Open KaamPaas on WhatsApp to get started.",
+                    "शुरू करने के लिए WhatsApp पर KaamPaas खोलें।",
+                  )
+                : say(
+                    "Receive an SMS code. A shared browser works too.",
+                    "SMS कोड पाएं। साझा कंप्यूटर का भी उपयोग कर सकते हैं।",
+                  ),
             ],
             [
               say("Choose your work area", "काम का इलाका चुनें"),

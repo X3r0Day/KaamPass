@@ -20,13 +20,24 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const lang = (await cookies()).get("kp-lang")?.value === "hi" ? "hi" : "en";
+  const number = process.env.WHATSAPP_PUBLIC_NUMBER?.trim() || "";
+  const whatsapp = /^[1-9]\d{7,14}$/.test(number)
+    ? `https://wa.me/${number}?text=Hi`
+    : "";
+  const phoneAuth =
+    (
+      process.env.WEB_PHONE_AUTH_ENABLED ??
+      (process.env.VERCEL ? "false" : "true")
+    ).toLowerCase() === "true";
   return (
     <html lang={lang}>
       <body>
         <a className="skip" href="#main">
           {lang === "hi" ? "मुख्य सामग्री" : "Skip to content"}
         </a>
-        <Shell initial={lang}>{children}</Shell>
+        <Shell initial={lang} whatsapp={whatsapp} phoneAuth={phoneAuth}>
+          {children}
+        </Shell>
       </body>
     </html>
   );

@@ -5,7 +5,7 @@ KaamPaas connects workers and small employers in **Ghaziabad district, Uttar Pra
 - Workers choose when employers can find them, accept invitations, and see their applications and reported earnings.
 - Employers publish openings, invite eligible workers, and close assignments as completed work or permanent hires.
 - Optional voice input becomes an editable draft. A “Listen” button reads the structured listing aloud. All actions also work without a microphone.
-- The site doesn't move money. Dial-in keypad access, WhatsApp, and messaging are not part of this release.
+- The site doesn't move money. WhatsApp registration, nearby search, and basic job posting are supported through the bot below. Dial-in keypad access and in-app chat remain out of scope.
 
 ## Run locally
 
@@ -53,12 +53,38 @@ After API contract changes:
 npm run contract --prefix apps/web
 ```
 
-## Deploy to Vercel
+## Run the WhatsApp bot
+
+No website OTP or Firebase credentials are needed in WhatsApp-only mode:
+
+1. In Meta, create a WhatsApp Cloud API business app and connect a WhatsApp Business number. Set a Meta token with `whatsapp_business_messaging` access to that number. On a test number, add the recipients you will actually test with.
+2. Put these **server-side** Vercel variables in the environment for the API (or the ignored `.env` for local use):
+
+   | Variable | What goes here |
+   |---|---|
+   | `WHATSAPP_PHONE_NUMBER_ID` | Meta's internal number ID from API Setup; **not** the dialable number |
+   | `WHATSAPP_ACCESS_TOKEN` | Cloud API access token; use a suitable system-user token for a continuing deployment |
+   | `WHATSAPP_APP_SECRET` | Meta application secret used to verify signed webhook bodies |
+   | `WHATSAPP_VERIFY_TOKEN` | Independently generated random value. Enter the same value in Meta's webhook setup |
+   | `WHATSAPP_GRAPH_VERSION` | Optional, defaults to `v26.0` |
+   | `TOKEN_HARBOR_API_KEY` | Token Harbor server key; [`deepseek-v4.1-flash:free`](https://tokenharbor.ai/docs/integrations/claude-code-deepseek) only |
+   | `SPEECH_CREDENTIALS_JSON` | Google service account JSON for [Cloud Speech-to-Text](https://docs.cloud.google.com/speech-to-text/docs/encoding) |
+   | `WHATSAPP_PUBLIC_NUMBER` | Public dialable number in international format, digits only. This enables the `wa.me` CTA |
+   | `WEB_PHONE_AUTH_ENABLED` | `false` for both services; this is Vercel's default. The local web setup still uses the Firebase emulator |
+
+   Keep `DATABASE_URL`, `WEB_ORIGINS`, and `CSRF_SECRET` set. Enable Token Harbor's free-model data sharing in its dashboard if required by your account. The bot offers its own explicit Voice + AI opt-in; guided text does not use Google or Token Harbor. No paid model fallback is configured.
+3. Apply `0003_whatsapp` with `uv run alembic upgrade head` before routing production messages. In Meta, set the callback to `https://YOUR_DOMAIN/api/whatsapp/webhook`, use the verification token above, and subscribe to `messages`. A public HTTPS route is required; open the website on a mobile device or WhatsApp Web and send `Hi` to the configured number. The registration confirmation is a native WhatsApp **Yes** button, not a website form.
+4. Try `Role: Worker`, `Name: …`, `Area: Duhai`, `Trade: Mason` and `Type: short-term` on separate lines. The bot asks only for missing fields, then waits for confirmation. In Voice + AI mode, the same details can be spoken in a WhatsApp voice note (up to 45 seconds). Google transcribes the note and the free DeepSeek model extracts known fields. The API, not the model, validates and creates the profile.
+5. As a worker, ask for `nearby jobs`, `invitations`, `applications`, `availability`, or `my profile`. When a numbered nearby list appears, `apply 1` opens a separate contact-sharing confirmation. As an employer, enter `post a job` to draft a listing, then confirm it with **Publish**. `my postings` checks statuses. The complete assignment/closure UI remains the website's employer board when its authentication is enabled.
+
+WhatsApp and the website use the same profile/public ID and job tables. A second channel independently verifies the number and asks the user to connect the existing profile; it does not create a second account or overwrite fields. Provider calls never receive a WhatsApp sender ID or full profile; Voice + AI sends the provided text/transcript after basic phone/email redaction. Avoid sharing addresses or identity documents in chat. The application does not retain raw audio or full messages. Completed outbound payloads are cleared; incomplete drafts expire after seven days, and stale deduplication rows are cleaned on traffic.
+
+### Deploy the website
 
 1. Import the **private** GitHub repository, `X3r0Day/delhi4`, with the repository root as the Vercel project root. `vercel.json` deploys `apps/web` and `apps/api` as separate services under one HTTPS hostname. Select Node 24. Keep `/api/(.*)` routed before the catch-all.
-2. Create separate production and staging projects in Firebase, and separate Neon databases or branches. Enable Phone Auth and Blaze billing. Authorize only the corresponding stable Vercel/custom domain and allow India under the project's SMS region policy. Use Firebase web app public configuration in the web build. Enable Cloud Speech-to-Text and Text-to-Speech, grant only the IAM permissions required by those services, set budgets/alerts, and configure server credentials separately.
+2. Use separate Neon databases or branches. Keep website SMS off for a WhatsApp-only release. **If enabling website SMS later**, create separate production and staging Firebase projects, set `WEB_PHONE_AUTH_ENABLED=true`, enable Phone Auth and Blaze billing, authorize only the corresponding stable domains, and allow India in the SMS region policy. Configure Cloud Speech-to-Text and Text-to-Speech separately and set budgets/alerts.
 3. Set the variables below in the appropriate environments. Scope preview credentials to preview/staging data, not production. Apply migrations once before promotion. For the first deployment, configure protected approvals for the GitHub `production` environment and set its `MIGRATION_DATABASE_URL` secret. Run **Checks** manually on `main` to apply migrations after test success and approval. For subsequent releases, use backward-compatible migrations; apply them before promoting the build that uses them. A Vercel rollback does not roll back the schema.
-4. On a preview domain, check `/api/health`, sign-in, the same-origin cookie, and the Hindi and English recording/readback flows. Test Android Chrome and iOS Safari with mic enabled and denied. Before announcing production, repeat registration and both hire types with real Indian phone numbers and real speech credentials. Monitor delivery, error rates, quotas, and backups.
+4. On a preview domain, check `/api/health`, webhook verification, WhatsApp registration and both types of posting with real business messaging and speech configured. If website SMS is enabled later, verify sign-in, the same-origin cookie, and the Hindi and English recording/readback flows on Android Chrome and iOS Safari. Monitor delivery, error rates, quotas, and backups.
 
 | Variable | Where | Value |
 |---|---|---|
