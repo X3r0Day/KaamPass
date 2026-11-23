@@ -41,12 +41,10 @@ export default function Home() {
               </>
             )}
             {!phoneAuth && !whatsapp && (
-              <p className="notice">
-                {say(
-                  "Registration is not open yet.",
-                  "पंजीकरण अभी शुरू नहीं हुआ है।",
-                )}
-              </p>
+              <>
+                <Link className="btn primary" href="/demo">{say("Test registration", "डेमो पंजीकरण")}</Link>
+                <p className="hint">{say("Hackathon preview. Live registration is paused.", "हैकाथॉन डेमो। असली पंजीकरण अभी बंद है।")}</p>
+              </>
             )}
           </div>
         </section>
