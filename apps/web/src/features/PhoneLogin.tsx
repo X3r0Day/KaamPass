@@ -1,12 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { ConfirmationResult, RecaptchaVerifier } from "firebase/auth";
+import type { ConfirmationResult, RecaptchaVerifier } from "@firebase/auth";
 import { api } from "@/lib/api";
 import { useWords } from "./Shell";
 import { Failure } from "./Common";
 
+const westernDigits = (value: string) =>
+  value.replace(/[०-९]/g, (digit) => String(digit.charCodeAt(0) - 0x0966));
+
 export function PhoneLogin({ done }: { done: () => void }) {
-  const { t, say } = useWords();
+  const { lang, t, say } = useWords();
   const [phone, setPhone] = useState(""),
     [code, setCode] = useState("");
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(
@@ -26,15 +29,16 @@ export function PhoneLogin({ done }: { done: () => void }) {
     setBusy(true);
     setErr(undefined);
     try {
-      const compact = phone.replace(/[\s()-]/g, "");
+      const compact = westernDigits(phone).replace(/[\s()-]/g, "");
       const number = /^\d{10}$/.test(compact) ? "+91" + compact : compact;
       if (!/^\+[1-9]\d{7,14}$/.test(number))
         throw Error("auth/invalid-phone-number");
       const [{ phoneAuth }, sdk] = await Promise.all([
         import("@/lib/firebase"),
-        import("firebase/auth"),
+        import("@firebase/auth"),
       ]);
       const auth = await phoneAuth();
+      auth.languageCode = lang;
       verifier.current?.clear();
       verifier.current = new sdk.RecaptchaVerifier(auth, "phone-challenge", {
         size: "invisible",
@@ -62,7 +66,7 @@ export function PhoneLogin({ done }: { done: () => void }) {
         });
       } finally {
         const [{ signOut }, { phoneAuth }] = await Promise.all([
-          import("firebase/auth"),
+          import("@firebase/auth"),
           import("@/lib/firebase"),
         ]);
         await signOut(await phoneAuth());
@@ -109,7 +113,7 @@ export function PhoneLogin({ done }: { done: () => void }) {
               pattern="[0-9]{6}"
               maxLength={6}
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={(e) => setCode(westernDigits(e.target.value))}
               required
             />
           </label>

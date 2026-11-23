@@ -75,9 +75,10 @@ export function Dictate({ onText }: { onText: (s: string) => void }) {
   );
 }
 export function Listen({ job, draft }: { job?: string; draft?: Draft }) {
-  const { lang, t } = useWords();
+  const { lang, t, say } = useWords();
   const [state, set] = useState("idle"),
-    [err, fail] = useState<unknown>();
+    [err, fail] = useState<unknown>(),
+    [manualAudio, setManualAudio] = useState<string>();
   const player = useRef<HTMLAudioElement | null>(null),
     generation = useRef(0);
   useEffect(
@@ -95,6 +96,7 @@ export function Listen({ job, draft }: { job?: string; draft?: Draft }) {
     }
     const id = ++generation.current;
     fail(undefined);
+    setManualAudio(undefined);
     set("loading");
     try {
       const res = await api<{ audio: string }>("/voice/readback", "POST", {
@@ -103,11 +105,20 @@ export function Listen({ job, draft }: { job?: string; draft?: Draft }) {
         draft,
       });
       if (id !== generation.current) return;
-      const audio = new Audio(`data:audio/mpeg;base64,${res.audio}`);
+      const source = `data:audio/mpeg;base64,${res.audio}`;
+      const audio = new Audio(source);
       player.current = audio;
       audio.onended = () => set("idle");
-      await audio.play();
-      set("playing");
+      try {
+        await audio.play();
+        if (id === generation.current) set("playing");
+        else audio.pause();
+      } catch {
+        if (id !== generation.current) return;
+        // Some browsers require another tap after the network request returns.
+        setManualAudio(source);
+        set("ready");
+      }
     } catch (e) {
       if (id === generation.current) {
         fail(e);
@@ -117,18 +128,26 @@ export function Listen({ job, draft }: { job?: string; draft?: Draft }) {
   }
   return (
     <div>
-      <button
-        type="button"
-        className="btn subtle"
-        disabled={state === "loading"}
-        onClick={play}
-      >
-        {state === "playing"
-          ? t("stop")
-          : state === "loading"
-            ? t("loading")
-            : t("listen")}
-      </button>
+      {manualAudio ? (
+        <audio
+          controls
+          src={manualAudio}
+          aria-label={say("Play job summary", "काम का विवरण सुनें")}
+        />
+      ) : (
+        <button
+          type="button"
+          className="btn subtle"
+          disabled={state === "loading"}
+          onClick={play}
+        >
+          {state === "playing"
+            ? t("stop")
+            : state === "loading"
+              ? t("loading")
+              : t("listen")}
+        </button>
+      )}
       {err != null && <Failure value={err} />}
     </div>
   );

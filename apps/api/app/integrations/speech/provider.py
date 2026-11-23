@@ -76,7 +76,7 @@ def transcribe(encoded, lang):
 
 def summary(db, job, lang):
     skill = one(db, "SELECT en,hi FROM skills WHERE id=:id", id=job["skill"])
-    place = one(db, "SELECT en,hi FROM localities WHERE id=:id", id=job["area"])
+    place = one(db, "SELECT en,hi,pin FROM localities WHERE id=:id", id=job["area"])
     if not place or not skill:
         raise HTTPException(422, "invalid_fields")
     amount = f"{job['pay'] / 100:.2f}".rstrip("0").rstrip(".")
@@ -88,16 +88,18 @@ def summary(db, job, lang):
     start = day(job["starts"])
     end = day(job["ends"]) if job.get("ends") else None
     time = str(job.get("shift_time") or "")[:5]
+    deadline = day(job["deadline"])
+    pin = " ".join(place["pin"])
     if lang == "hi":
         kind = "स्थायी नौकरी" if job["kind"] == "permanent" else "अस्थायी काम"
         return (
-            f"{skill[lang]}, {place[lang]}। {kind}। {amount} रुपये प्रति {units[job['unit']]}। "
-            f"शुरुआत {start} {time}।" + (f" अंत {end}।" if end else "")
+            f"{skill[lang]}, {place[lang]}। पिन कोड {pin}। {kind}। {amount} रुपये प्रति {units[job['unit']]}। "
+            f"शुरुआत {start} {time}।" + (f" अंत {end}।" if end else "") + f" आवेदन की अंतिम तारीख {deadline}।"
         )
     kind = "Permanent opening" if job["kind"] == "permanent" else "Short-term work"
     return (
-        f"{skill[lang]} in {place[lang]}. {kind}. {amount} rupees per {job['unit']}. "
-        f"Starts {start} {time}." + (f" Ends {end}." if end else "")
+        f"{skill[lang]} in {place[lang]}. Postal PIN {pin}. {kind}. {amount} rupees per {job['unit']}. "
+        f"Starts {start} {time}." + (f" Ends {end}." if end else "") + f" Apply by {deadline}."
     )
 
 

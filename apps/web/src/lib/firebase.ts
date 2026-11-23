@@ -1,10 +1,10 @@
-import { getApps, initializeApp } from "firebase/app";
+import { getApps, initializeApp } from "@firebase/app";
 import {
   connectAuthEmulator,
   getAuth,
   inMemoryPersistence,
   setPersistence,
-} from "firebase/auth";
+} from "@firebase/auth";
 
 let ready: ReturnType<typeof initialize> | undefined;
 async function initialize() {

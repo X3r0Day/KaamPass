@@ -36,7 +36,12 @@ app.include_router(voice.router)
 
 @app.middleware("http")
 async def private_responses(request: Request, call_next):
-    response = await call_next(request)
+    length = request.headers.get("content-length", "")
+    cap = 1_400_000 if request.url.path == "/api/voice/transcribe" else 32_768
+    if length and (not length.isascii() or not length.isdecimal() or len(length) > 10 or int(length) > cap):
+        response = JSONResponse({"detail": "body_too_large"}, status_code=413)
+    else:
+        response = await call_next(request)
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
