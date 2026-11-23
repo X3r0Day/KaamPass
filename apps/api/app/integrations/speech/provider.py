@@ -74,6 +74,52 @@ def transcribe(encoded, lang):
     return {"transcript": " ".join(lines)[:1200]}
 
 
+def whatsapp_transcript(raw: bytes, lang: str):
+    # Ogg Opus timestamps always count at 48 kHz. Bound decoded duration before calling Google.
+    offset = 0
+    serial = None
+    granule = 0
+    while offset + 27 <= len(raw):
+        if raw[offset : offset + 5] != b"OggS\x00":
+            break
+        segments = raw[offset + 26]
+        start = offset + 27 + segments
+        end = start + sum(raw[offset + 27 : start])
+        if start > len(raw) or end > len(raw):
+            break
+        stream = raw[offset + 14 : offset + 18]
+        if serial is None:
+            serial = stream
+            if end - start < 19 or raw[start : start + 8] != b"OpusHead" or raw[start + 9] != 1:
+                break
+        if stream != serial:
+            break
+        timestamp = int.from_bytes(raw[offset + 6 : offset + 14], "little", signed=True)
+        if timestamp >= 0:
+            if timestamp < granule or timestamp > 45 * 48000:
+                break
+            granule = timestamp
+        offset = end
+    if offset != len(raw) or granule < 4800:
+        raise HTTPException(422, "audio_format")
+    result = call(
+        "https://speech.googleapis.com/v1/speech:recognize",
+        {
+            "audio": {"content": base64.b64encode(raw).decode()},
+            "config": {
+                "encoding": "OGG_OPUS",
+                "sampleRateHertz": 48000,
+                "languageCode": f"{lang}-IN",
+                "model": os.getenv("SPEECH_MODEL", "default"),
+            },
+        },
+    )
+    transcript = " ".join(
+        r["alternatives"][0]["transcript"] for r in result.get("results", []) if r.get("alternatives")
+    )
+    return transcript[:1000]
+
+
 def summary(db, job, lang):
     skill = one(db, "SELECT en,hi FROM skills WHERE id=:id", id=job["skill"])
     place = one(db, "SELECT en,hi,pin FROM localities WHERE id=:id", id=job["area"])

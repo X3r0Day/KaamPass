@@ -21,6 +21,7 @@ COOKIE = {"httponly": True, "secure": True, "samesite": "lax", "path": "/"}
 class Actor:
     uid: str
     phone: str
+    provider: str = "firebase"
 
 
 def claims_actor(claims):
@@ -35,7 +36,7 @@ def claims_actor(claims):
 
 def actor(request: Request) -> Actor:
     cookie = request.cookies.get(SESSION)
-    if not cookie:
+    if not cookie or not settings().phone_auth_enabled:
         raise HTTPException(401, "sign_in")
     try:
         claims = auth.verify_session_cookie(cookie, check_revoked=True, app=firebase_app())
@@ -84,6 +85,8 @@ def rate_limit(bucket: str, identity: str, limit: int):
 def protect_write(request: Request):
     if request.method in {"GET", "HEAD", "OPTIONS"}:
         return
+    if request.method == "POST" and request.url.path == "/api/whatsapp/webhook":
+        return  # Meta is authenticated against the exact request body by the webhook.
     if request.headers.get("origin") not in settings().origins:
         raise HTTPException(403, "origin")
     sent = request.headers.get("x-csrf-token", "")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import Connection
 
-from app.db.store import many, transaction
+from app.db.store import many, one, transaction
 from app.models import Availability, Me, Onboarding, Place, Profile, ProfileFields, Skill
 from app.security import Actor, actor
 from app.services import profiles
@@ -13,7 +13,17 @@ router = APIRouter(prefix="/api")
 @router.get("/me", response_model=Me)
 def me(user: Actor = Depends(actor), db: Connection = Depends(transaction)):
     profile = profiles.find_profile(db, user)
-    return {"needs_onboarding": profile is None, "profile": profile}
+    return {
+        "needs_onboarding": profile is None,
+        "profile": profile,
+        "can_connect": profile is None
+        and bool(one(db, "SELECT 1 FROM profiles WHERE phone=:phone", phone=user.phone)),
+    }
+
+
+@router.post("/me/connect", response_model=Profile)
+def connect(user: Actor = Depends(actor), db: Connection = Depends(transaction)):
+    return profiles.reuse_confirmed_profile(db, user)
 
 
 @router.post("/me/onboarding", response_model=Profile)

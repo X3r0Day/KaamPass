@@ -131,6 +131,24 @@
         }
       }
     },
+    "/api/me/connect": {
+      "post": {
+        "summary": "Connect",
+        "operationId": "connect_api_me_connect_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/me/onboarding": {
       "post": {
         "summary": "Confirm",
@@ -920,6 +938,38 @@
         }
       }
     },
+    "/api/whatsapp/webhook": {
+      "get": {
+        "summary": "Challenge",
+        "operationId": "challenge_api_whatsapp_webhook_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Webhook",
+        "operationId": "webhook_api_whatsapp_webhook_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "summary": "Health",
@@ -1415,6 +1465,11 @@
                 "type": "null"
               }
             ]
+          },
+          "can_connect": {
+            "type": "boolean",
+            "title": "Can Connect",
+            "default": false
           }
         },
         "type": "object",

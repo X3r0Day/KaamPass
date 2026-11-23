@@ -58,6 +58,7 @@ class Profile(Onboarding):
 class Me(BaseModel):
     needs_onboarding: bool
     profile: Profile | None
+    can_connect: bool = False
 
 
 class Availability(Form):

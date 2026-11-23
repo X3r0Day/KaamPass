@@ -14,23 +14,44 @@ PUBLIC_FIELDS = """p.public_id,p.name,p.role,p.lang,p.area,p.kinds,
 
 
 def find_profile(db, user: Actor) -> Profile | None:
-    bound = one(
+    bindings = many(
         db,
-        """SELECT phone,subject FROM identity_bindings WHERE provider='firebase'
-                       AND (phone=:phone OR subject=:uid) LIMIT 1""",
+        """SELECT phone,subject FROM identity_bindings WHERE provider=:provider
+                       AND (phone=:phone OR subject=:uid)""",
         phone=user.phone,
         uid=user.uid,
+        provider=user.provider,
     )
-    if bound and (bound["phone"] != user.phone or bound["subject"] != user.uid):
+    if any(b["phone"] != user.phone or b["subject"] != user.uid for b in bindings):
         raise HTTPException(409, "identity_conflict")
-    if not bound:
-        if one(db, "SELECT 1 FROM profiles WHERE phone=:p", p=user.phone):
-            raise HTTPException(409, "identity_conflict")
+    if not bindings:
         return None
     row = one(
         db, f"SELECT {PUBLIC_FIELDS} FROM profiles p WHERE p.phone=:phone", phone=user.phone, today=today()
     )
     return Profile(**row)
+
+
+def reuse_confirmed_profile(db, user: Actor):
+    """Link a second, independently verified channel without creating or editing a profile."""
+    run(db, "SELECT pg_advisory_xact_lock(hashtextextended(:phone,0))", phone=user.phone)
+    current = find_profile(db, user)
+    if current:
+        return current
+    if not one(db, "SELECT 1 FROM profiles WHERE phone=:phone", phone=user.phone):
+        raise HTTPException(404, "not_found")
+    bind(db, user)
+    return find_profile(db, user)
+
+
+def bind(db, user: Actor):
+    run(
+        db,
+        "INSERT INTO identity_bindings VALUES (:provider,:uid,:phone)",
+        provider=user.provider,
+        uid=user.uid,
+        phone=user.phone,
+    )
 
 
 def current_profile(user: Actor = Depends(actor), db: Connection = Depends(transaction)) -> Profile:
@@ -70,13 +91,15 @@ def replace_choices(db, pid: str, fields: ProfileFields):
 
 
 def register(db, user: Actor, fields: Onboarding):
-    for key in (user.phone, user.uid):
+    for key in (user.phone, f"{user.provider}:{user.uid}"):
         run(db, "SELECT pg_advisory_xact_lock(hashtextextended(:key,0))", key=key)
     existing = find_profile(db, user)
     if existing:
         if existing.role != fields.role:
             raise HTTPException(409, "identity_conflict")
         return existing
+    if one(db, "SELECT 1 FROM profiles WHERE phone=:phone", phone=user.phone):
+        raise HTTPException(409, "identity_conflict")
     validate_choices(db, fields, fields.role)
     for _ in range(12):
         prefix = "WKR" if fields.role == "worker" else "EMP"
@@ -94,7 +117,7 @@ def register(db, user: Actor, fields: Onboarding):
             break
     else:
         raise HTTPException(503, "retry")
-    run(db, "INSERT INTO identity_bindings VALUES ('firebase',:uid,:phone)", uid=user.uid, phone=user.phone)
+    bind(db, user)
     replace_choices(db, pid, fields)
     return find_profile(db, user)
 

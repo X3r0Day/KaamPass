@@ -79,7 +79,7 @@ def can_read_job(db, profile, job):
     raise HTTPException(404, "not_found")
 
 
-def dashboard(db, profile: Profile, tab: str, page: int):
+def dashboard(db, profile: Profile, tab: str, page: int, *, area=None, skill=None, kind=None):
     params = dict(me=profile.public_id, today=today(), size=PAGE + 1, offset=page * PAGE)
     order = "j.created_at DESC,j.id"
     if profile.role == "employer":
@@ -106,6 +106,10 @@ def dashboard(db, profile: Profile, tab: str, page: int):
              FROM assignments a JOIN jobs j ON j.id=a.job WHERE a.worker=:me""",
             **params,
         )
+    for field, value in (("area", area), ("skill", skill), ("kind", kind)):
+        if value is not None:
+            query += f" AND j.{field}=:{field}"
+            params[field] = value
     jobs = many(db, query + f" ORDER BY {order} LIMIT :size OFFSET :offset", **params)
     return {"profile": profile, "stats": stats, "jobs": jobs[:PAGE], "more": len(jobs) > PAGE}
 

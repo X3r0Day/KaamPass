@@ -5,16 +5,19 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.db.store import engine
-from app.routes import authentication, hiring, jobs, profiles, voice
+from app.integrations.whatsapp import meta
+from app.routes import authentication, hiring, jobs, profiles, voice, whatsapp
 from app.security import protect_write
 from app.settings import firebase_app, settings
 
 
 @asynccontextmanager
 async def lifespan(app):
-    settings()
+    config = settings()
     engine()
-    firebase_app()
+    meta.config()
+    if config.phone_auth_enabled:
+        firebase_app()
     yield
 
 
@@ -32,12 +35,13 @@ app.include_router(profiles.router)
 app.include_router(jobs.router)
 app.include_router(hiring.router)
 app.include_router(voice.router)
+app.include_router(whatsapp.router)
 
 
 @app.middleware("http")
 async def private_responses(request: Request, call_next):
     length = request.headers.get("content-length", "")
-    cap = 1_400_000 if request.url.path == "/api/voice/transcribe" else 32_768
+    cap = {"/api/voice/transcribe": 1_400_000, "/api/whatsapp/webhook": 262_144}.get(request.url.path, 32_768)
     if length and (not length.isascii() or not length.isdecimal() or len(length) > 10 or int(length) > cap):
         response = JSONResponse({"detail": "body_too_large"}, status_code=413)
     else:

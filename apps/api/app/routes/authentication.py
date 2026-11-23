@@ -7,7 +7,7 @@ from firebase_admin.exceptions import FirebaseError
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.security import COOKIE, CSRF, SESSION, Actor, actor, claims_actor, issue_csrf, valid_csrf
-from app.settings import firebase_app
+from app.settings import firebase_app, settings
 
 router = APIRouter(prefix="/api/auth")
 
@@ -30,6 +30,8 @@ def csrf(request: Request, response: Response):
 
 @router.post("/session", response_model=CsrfToken)
 def exchange(body: Exchange, response: Response):
+    if not settings().phone_auth_enabled:
+        raise HTTPException(503, "auth_unconfigured")
     app = firebase_app()
     try:
         claims = auth.verify_id_token(body.id_token, check_revoked=True, app=app)

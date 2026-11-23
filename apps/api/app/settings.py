@@ -14,12 +14,18 @@ class Settings:
     origins: frozenset[str]
     csrf_key: bytes
     local: bool
+    phone_auth_enabled: bool
 
 
 @lru_cache
 def settings():
     local = not os.getenv("VERCEL") and os.getenv("APP_ENV") in {"local", "test"}
-    project = os.environ["FIREBASE_PROJECT_ID"]
+    phone_auth_enabled = (
+        os.getenv("WEB_PHONE_AUTH_ENABLED", "false" if os.getenv("VERCEL") else "true").lower() == "true"
+    )
+    project = os.getenv("FIREBASE_PROJECT_ID", "")
+    if phone_auth_enabled and not project:
+        raise RuntimeError("FIREBASE_PROJECT_ID is required for website phone sign-in")
     emulator = os.getenv("FIREBASE_AUTH_EMULATOR_HOST")
     if emulator and (
         not local
@@ -48,7 +54,7 @@ def settings():
     key = os.environ["CSRF_SECRET"].encode()
     if len(key) < 32:
         raise RuntimeError("CSRF_SECRET must have at least 32 bytes")
-    return Settings(project, origins, key, local)
+    return Settings(project, origins, key, local, phone_auth_enabled)
 
 
 @lru_cache
