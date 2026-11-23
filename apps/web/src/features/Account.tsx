@@ -8,6 +8,7 @@ import { PhoneLogin } from "./PhoneLogin";
 import { ProfileForm } from "./ProfileForm";
 import { Failure, Loading } from "./Common";
 import { useWords } from "./Shell";
+import { HackathonRegistration } from "./HackathonRegistration";
 const me = () => api<S["Me"]>("/me");
 const disabled = () => Promise.resolve(null);
 export function Account({
@@ -29,7 +30,9 @@ export function Account({
     if (!edit && state.data?.profile) router.replace("/dashboard");
   }, [edit, signedOut, state.data, router]);
   let body;
-  if (!phoneAuth)
+  if (!phoneAuth && !whatsapp)
+    body = <HackathonRegistration intent={intent} />;
+  else if (!phoneAuth)
     body = (
       <div className="stack">
         <h1>

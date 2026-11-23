@@ -3,26 +3,25 @@ import Link from "next/link";
 import { useState } from "react";
 import { useWords } from "@/features/Shell";
 
-export default function Demo() {
+export function HackathonRegistration({ intent }: { intent: "worker" | "employer" }) {
   const { say } = useWords();
   const [step, setStep] = useState(0);
-  const [role, setRole] = useState("worker");
+  const [role, setRole] = useState<string>(intent);
   const [name, setName] = useState("");
   const [area, setArea] = useState("Duhai");
   const [id, setId] = useState("");
   const [saved, setSaved] = useState(false);
   return (
-    <section className="sheet stack">
-      <p className="tag">{say("Hackathon demo · sample data only", "हैकाथॉन डेमो · केवल नमूना डेटा")}</p>
+    <div className="stack">
       {step < 3 ? (
         <form className="stack" key={step} onSubmit={e => {
           e.preventDefault();
           if (step === 2) setId(`DEMO-${role === "worker" ? "WKR" : "EMP"}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`);
           setStep(step + 1);
         }}>
-          <h1>{step === 0 ? say("Test registration", "डेमो पंजीकरण") : step === 1 ? say("Enter a test code", "डेमो कोड भरें") : say("Create your demo profile", "डेमो प्रोफ़ाइल बनाएँ")}</h1>
+          <h1>{step === 0 ? say("Register with KaamPaas", "KaamPaas पर पंजीकरण करें") : step === 1 ? say("Enter verification code", "सत्यापन कोड भरें") : say("Create your profile", "अपनी प्रोफ़ाइल बनाएँ")}</h1>
           {step === 0 && <>
-            <p>{say("No SMS is sent. Use sample details only. This profile stays in this browser tab and never signs you into a real account.", "SMS नहीं भेजा जाएगा। केवल नमूना विवरण दें। यह प्रोफ़ाइल इसी टैब तक सीमित है।")}</p>
+            <p>{say("For the hackathon, use sample details. No SMS is sent, and your profile stays in this browser tab.", "हैकाथॉन के लिए नमूना विवरण दें। SMS नहीं भेजा जाएगा और प्रोफ़ाइल इसी टैब तक सीमित है।")}</p>
             <label className="field">{say("Try as", "भूमिका चुनें")}<select value={role} onChange={e => setRole(e.target.value)}>
               <option value="worker">{say("Worker", "कामगार")}</option><option value="employer">{say("Employer", "नियोक्ता")}</option>
             </select></label>
@@ -36,7 +35,7 @@ export default function Demo() {
               <option>Duhai</option><option>Loni</option><option>Modinagar</option>
             </select></label>
           </>}
-          <button disabled={step === 2 && !name.trim()} className="btn primary">{step === 0 ? say("Start demo", "डेमो शुरू करें") : step === 1 ? say("Verify test code", "डेमो कोड जाँचें") : say("Confirm demo profile", "डेमो प्रोफ़ाइल की पुष्टि करें")}</button>
+          <button disabled={step === 2 && !name.trim()} className="btn primary">{step === 0 ? say("Continue", "जारी रखें") : step === 1 ? say("Verify code", "कोड जाँचें") : say("Confirm profile", "प्रोफ़ाइल की पुष्टि करें")}</button>
         </form>
       ) : <>
         <h1>{name.trim()}</h1><p>{id} · {area}</p>
@@ -49,6 +48,6 @@ export default function Demo() {
         <button className="btn light" onClick={() => { setStep(0); setName(""); setSaved(false); }}>{say("Reset demo", "डेमो रीसेट करें")}</button>
       </>}
       <Link className="link" href="/">{say("Back to KaamPaas", "KaamPaas पर लौटें")}</Link>
-    </section>
+    </div>
   );
 }
