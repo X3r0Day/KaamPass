@@ -1,0 +1,3 @@
+The pilot covers 17 named postal areas in Alwar, Rajasthan. `localities.csv` contains reference geography, never listings or people. English names and PINs come from the [India Post directory mirror](https://github.com/IndiaPost/pin/tree/9903190eb2073826f869f0c384bb83a34a21ebd5), retrieved 2026-11-24. The [Department of Posts catalog](https://www.data.gov.in/resource/all-india-pincode-directory-till-last-month) is the upstream reference. Hindi labels and trade aliases are maintained locally. Review spelling and current coverage with a local speaker before expanding.
+
+Run `python reference_data/import_places.py` from `apps/api` to reproduce the snapshot. Add a new Alembic revision when updating an already-deployed catalog.
