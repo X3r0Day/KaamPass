@@ -1,0 +1,85 @@
+name: Checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: |
+            apps/web/package-lock.json
+            tests/e2e/package-lock.json
+      - uses: astral-sh/setup-uv@v7
+      - run: uv python install 3.12
+      - run: bash scripts/local.sh
+      - run: docker compose up -d --wait db
+      - name: API, clean migrations, and contract
+        run: |
+          set -a
+          source .env
+          cd apps/api
+          uv sync --locked
+          uv run ruff check .
+          uv run alembic upgrade head
+          uv run pytest -q
+          uv run python export_contract.py
+      - name: Web build and lint
+        run: |
+          set -a
+          source .env
+          cd apps/web
+          npm ci
+          npm run contract
+          git diff --exit-code -- ../api/openapi.json src/lib/schema.d.ts
+          npm run lint
+          npm run typecheck
+          npm run build
+      - name: Playwright
+        id: browser
+        run: |
+          set -a
+          source .env
+          mkdir -p /tmp/kaampaas-ci
+          npm ci --prefix tests/e2e
+          (cd tests/e2e && npx playwright install --with-deps chromium)
+          ./tests/e2e/node_modules/.bin/firebase emulators:start --project demo-kaampaas --only auth > /tmp/kaampaas-ci/auth.log 2>&1 &
+          (cd apps/api && exec uv run uvicorn main:app --host 127.0.0.1 --port 18031 --no-access-log) > /tmp/kaampaas-ci/api.log 2>&1 &
+          (cd apps/web && exec npm run start -- --hostname 127.0.0.1) > /tmp/kaampaas-ci/web.log 2>&1 &
+          for url in http://127.0.0.1:19099/ http://127.0.0.1:3000/api/health; do
+            for attempt in {1..60}; do
+              if curl -fsS "$url" >/dev/null 2>&1; then break; fi
+              sleep 1
+            done
+            curl -fsS "$url" >/dev/null
+          done
+          npm test --prefix tests/e2e
+
+  migrate-production:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: kaampaas-production-migrations
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - run: uv python install 3.12
+      - name: Apply migrations to Neon
+        working-directory: apps/api
+        env:
+          APP_ENV: production
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: |
+          test -n "$MIGRATION_DATABASE_URL"
+          uv sync --locked --no-dev
+          uv run --no-dev alembic upgrade head

@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
+import { fileURLToPath } from "node:url";
 
 const config: NextConfig = {
   poweredByHeader: false,
+  devIndicators: false,
+  turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
   async rewrites() {
     return process.env.LOCAL_API_ORIGIN && !process.env.VERCEL
       ? [
