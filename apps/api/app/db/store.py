@@ -19,8 +19,12 @@ def database_url(migration: bool = False):
 
 @lru_cache
 def engine():
-    return create_engine(database_url(), poolclass=NullPool, hide_parameters=True,
-                         connect_args={"connect_timeout": 8, "prepare_threshold": None})
+    return create_engine(
+        database_url(),
+        poolclass=NullPool,
+        hide_parameters=True,
+        connect_args={"connect_timeout": 8, "prepare_threshold": None},
+    )
 
 
 def transaction() -> Iterator[Connection]:

@@ -1,5 +1,7 @@
 from uuid import UUID
+
 from fastapi import APIRouter
+
 from app.models import Answer, Candidate, Consent, Earnings, PersonRef
 from app.routes.jobs import DB, Member, Page
 from app.services import hiring

@@ -1,6 +1,8 @@
 """The first Alwar work board."""
-from pathlib import Path
+
 import csv
+from pathlib import Path
+
 from alembic import op
 from sqlalchemy import text
 
@@ -15,13 +17,24 @@ def upgrade():
             op.execute(statement)
     conn = op.get_bind()
     for table, columns in [("localities", "id,en,hi,pin"), ("skills", "id,en,hi,aliases")]:
-        with (root / f"reference_data/{table}.csv").open(encoding="utf-8") as file:
+        with (root / f"migrations/seed/0001/{table}.csv").open(encoding="utf-8") as file:
             rows = list(csv.DictReader(file))
         fields = ", ".join(":" + key for key in columns.split(","))
         conn.execute(text(f"INSERT INTO {table} ({columns}) VALUES ({fields})"), rows)
 
 
 def downgrade():
-    for name in ("rate_buckets", "assignments", "interests", "invitations", "jobs", "worker_work_areas",
-                 "worker_skills", "identity_bindings", "profiles", "skills", "localities"):
+    for name in (
+        "rate_buckets",
+        "assignments",
+        "interests",
+        "invitations",
+        "jobs",
+        "worker_work_areas",
+        "worker_skills",
+        "identity_bindings",
+        "profiles",
+        "skills",
+        "localities",
+    ):
         op.execute(f"DROP TABLE {name}")

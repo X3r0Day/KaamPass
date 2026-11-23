@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+
 from app.db.store import many, one, run
 from app.models import today
 from app.services.matching import PAGE, owned, worker_job
@@ -17,8 +18,13 @@ def invite(db, profile, job, worker):
     run(db, "SELECT public_id FROM profiles WHERE public_id=:worker FOR UPDATE", worker=worker)
     if not worker_job(db, worker, job, visible=True):
         raise HTTPException(409, "not_available")
-    run(db, """INSERT INTO invitations(job,worker) VALUES (:job,:worker)
-               ON CONFLICT (job,worker) DO NOTHING""", job=job, worker=worker)
+    run(
+        db,
+        """INSERT INTO invitations(job,worker) VALUES (:job,:worker)
+               ON CONFLICT (job,worker) DO NOTHING""",
+        job=job,
+        worker=worker,
+    )
 
 
 def interest(db, profile, job):
@@ -33,7 +39,11 @@ def interest(db, profile, job):
     ):
         raise HTTPException(404, "not_found")
     run(db, "INSERT INTO interests(job,worker) VALUES (:job,:worker) ON CONFLICT DO NOTHING", **params)
-    run(db, "UPDATE invitations SET response='accepted' WHERE worker=:worker AND job=:job AND response='pending'", **params)
+    run(
+        db,
+        "UPDATE invitations SET response='accepted' WHERE worker=:worker AND job=:job AND response='pending'",
+        **params,
+    )
 
 
 def respond(db, profile, invitation, answer):
@@ -59,15 +69,22 @@ def respond(db, profile, invitation, answer):
 
 def interested_workers(db, profile, job, page):
     owned(db, profile, job)
-    return many(db, """SELECT p.public_id,p.area FROM interests i JOIN profiles p ON p.public_id=i.worker
+    return many(
+        db,
+        """SELECT p.public_id,p.area FROM interests i JOIN profiles p ON p.public_id=i.worker
             WHERE i.job=:job ORDER BY i.consent_at,p.public_id LIMIT :size OFFSET :offset""",
-                job=job, size=PAGE, offset=PAGE*page)
+        job=job,
+        size=PAGE,
+        offset=PAGE * page,
+    )
 
 
 def assign(db, profile, job, worker):
     listing = owned(db, profile, job, lock=True)
     params = dict(job=job, worker=worker)
-    if listing["state"] == "assigned" and one(db, "SELECT 1 FROM assignments WHERE job=:job AND worker=:worker", **params):
+    if listing["state"] == "assigned" and one(
+        db, "SELECT 1 FROM assignments WHERE job=:job AND worker=:worker", **params
+    ):
         return
     if listing["state"] != "open":
         raise HTTPException(409, "opening_closed")
@@ -92,9 +109,14 @@ def close(db, profile, job, target):
 
 
 def contact(db, profile, job):
-    partner = one(db, """SELECT p.phone,p.public_id,p.name FROM jobs j JOIN assignments a ON a.job=j.id
+    partner = one(
+        db,
+        """SELECT p.phone,p.public_id,p.name FROM jobs j JOIN assignments a ON a.job=j.id
         JOIN profiles p ON p.public_id=CASE WHEN j.employer=:me THEN a.worker ELSE j.employer END
-        WHERE j.id=:job AND j.state='assigned' AND :me IN (j.employer,a.worker)""", job=job, me=profile.public_id)
+        WHERE j.id=:job AND j.state='assigned' AND :me IN (j.employer,a.worker)""",
+        job=job,
+        me=profile.public_id,
+    )
     if not partner:
         raise HTTPException(404, "not_found")
     return partner
@@ -102,8 +124,13 @@ def contact(db, profile, job):
 
 def earnings(db, profile, job, amount):
     require_role(profile, "worker")
-    result = run(db, """UPDATE assignments a SET reported_pay=:amount FROM jobs j
+    result = run(
+        db,
+        """UPDATE assignments a SET reported_pay=:amount FROM jobs j
         WHERE a.job=j.id AND j.id=:job AND a.worker=:me AND j.state='completed' AND j.kind='short_term'""",
-                 job=job, amount=amount, me=profile.public_id)
+        job=job,
+        amount=amount,
+        me=profile.public_id,
+    )
     if not result.rowcount:
         raise HTTPException(404, "not_found")

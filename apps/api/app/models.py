@@ -84,8 +84,9 @@ class JobDraft(Form):
             raise ValueError("pay or deadline")
         if self.kind == "permanent" and self.ends is not None:
             raise ValueError("permanent opening cannot end")
-        if self.kind == "short_term" and (not self.ends or self.ends < self.starts or
-                (self.starts == self.ends and not self.shift_time)):
+        if self.kind == "short_term" and (
+            not self.ends or self.ends < self.starts or (self.starts == self.ends and not self.shift_time)
+        ):
             raise ValueError("shift dates")
         return self
 

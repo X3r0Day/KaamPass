@@ -1,4 +1,5 @@
 import secrets
+
 from fastapi import Depends, HTTPException
 from sqlalchemy import Connection
 
@@ -13,15 +14,22 @@ PUBLIC_FIELDS = """p.public_id,p.name,p.role,p.lang,p.area,p.kinds,
 
 
 def find_profile(db, user: Actor) -> Profile | None:
-    bound = one(db, """SELECT phone,subject FROM identity_bindings WHERE provider='firebase'
-                       AND (phone=:phone OR subject=:uid) LIMIT 1""", phone=user.phone, uid=user.uid)
+    bound = one(
+        db,
+        """SELECT phone,subject FROM identity_bindings WHERE provider='firebase'
+                       AND (phone=:phone OR subject=:uid) LIMIT 1""",
+        phone=user.phone,
+        uid=user.uid,
+    )
     if bound and (bound["phone"] != user.phone or bound["subject"] != user.uid):
         raise HTTPException(409, "identity_conflict")
     if not bound:
         if one(db, "SELECT 1 FROM profiles WHERE phone=:p", p=user.phone):
             raise HTTPException(409, "identity_conflict")
         return None
-    row = one(db, f"SELECT {PUBLIC_FIELDS} FROM profiles p WHERE p.phone=:phone", phone=user.phone, today=today())
+    row = one(
+        db, f"SELECT {PUBLIC_FIELDS} FROM profiles p WHERE p.phone=:phone", phone=user.phone, today=today()
+    )
     return Profile(**row)
 
 
@@ -46,7 +54,7 @@ def validate_choices(db, fields: ProfileFields, role):
     areas = set([fields.area, *fields.areas])
     if len(areas) != 1 + len(fields.areas) or len(set(fields.skills)) != len(fields.skills):
         raise HTTPException(422, "invalid_fields")
-    places = many(db, "SELECT id FROM localities WHERE id=ANY(:ids)", ids=list(areas))
+    places = many(db, "SELECT id FROM localities WHERE active AND id=ANY(:ids)", ids=list(areas))
     skills = many(db, "SELECT id FROM skills WHERE id=ANY(:ids)", ids=fields.skills)
     if len(places) != len(areas) or len(skills) != len(fields.skills):
         raise HTTPException(422, "invalid_fields")
@@ -72,11 +80,16 @@ def register(db, user: Actor, fields: Onboarding):
     validate_choices(db, fields, fields.role)
     for _ in range(12):
         prefix = "WKR" if fields.role == "worker" else "EMP"
-        pid = f"{prefix}-{secrets.randbelow(900000)+100000}"
-        row = one(db, """INSERT INTO profiles(phone,public_id,role,name,lang,area,kinds)
+        pid = f"{prefix}-{secrets.randbelow(900000) + 100000}"
+        row = one(
+            db,
+            """INSERT INTO profiles(phone,public_id,role,name,lang,area,kinds)
              VALUES (:phone,:id,:role,:name,:lang,:area,:kinds)
              ON CONFLICT (public_id) DO NOTHING RETURNING public_id""",
-                  phone=user.phone, id=pid, **fields.model_dump())
+            phone=user.phone,
+            id=pid,
+            **fields.model_dump(),
+        )
         if row:
             break
     else:
@@ -88,8 +101,12 @@ def register(db, user: Actor, fields: Onboarding):
 
 def edit(db, profile: Profile, fields: ProfileFields):
     validate_choices(db, fields, profile.role)
-    run(db, "UPDATE profiles SET name=:name,lang=:lang,area=:area,kinds=:kinds WHERE public_id=:id",
-        id=profile.public_id, **fields.model_dump())
+    run(
+        db,
+        "UPDATE profiles SET name=:name,lang=:lang,area=:area,kinds=:kinds WHERE public_id=:id",
+        id=profile.public_id,
+        **fields.model_dump(),
+    )
     replace_choices(db, profile.public_id, fields)
 
 
@@ -98,5 +115,10 @@ def availability(db, profile: Profile, body: Availability):
     end = today() if body.mode == "today" else body.until if body.mode == "until" else None
     if body.mode == "until" and (not end or end < today()):
         raise HTTPException(422, "invalid_fields")
-    run(db, "UPDATE profiles SET discoverable=:visible,discoverable_until=:end WHERE public_id=:id",
-        visible=body.mode != "paused", end=end, id=profile.public_id)
+    run(
+        db,
+        "UPDATE profiles SET discoverable=:visible,discoverable_until=:end WHERE public_id=:id",
+        visible=body.mode != "paused",
+        end=end,
+        id=profile.public_id,
+    )

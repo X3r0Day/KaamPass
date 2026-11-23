@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.db.store import engine
-from app.routes import authentication, hiring, jobs, profiles
+from app.routes import authentication, hiring, jobs, profiles, voice
 from app.security import protect_write
 from app.settings import firebase_app, settings
 
@@ -18,12 +18,20 @@ async def lifespan(app):
     yield
 
 
-app = FastAPI(title="KaamPaas", version="1.0", lifespan=lifespan,
-              docs_url=None, redoc_url=None, openapi_url=None, dependencies=[Depends(protect_write)])
+app = FastAPI(
+    title="KaamPaas",
+    version="1.0",
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+    dependencies=[Depends(protect_write)],
+)
 app.include_router(authentication.router)
 app.include_router(profiles.router)
 app.include_router(jobs.router)
 app.include_router(hiring.router)
+app.include_router(voice.router)
 
 
 @app.middleware("http")
@@ -36,7 +44,9 @@ async def private_responses(request: Request, call_next):
 
 @app.exception_handler(RequestValidationError)
 async def invalid_input(request, exc):
-    return JSONResponse({"detail": "invalid_fields", "fields": [e["loc"][-1] for e in exc.errors()]}, status_code=422)
+    return JSONResponse(
+        {"detail": "invalid_fields", "fields": [e["loc"][-1] for e in exc.errors()]}, status_code=422
+    )
 
 
 @app.get("/api/health")

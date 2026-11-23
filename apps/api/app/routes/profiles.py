@@ -22,15 +22,23 @@ def confirm(body: Onboarding, user: Actor = Depends(actor), db: Connection = Dep
 
 
 @router.patch("/me", response_model=Profile)
-def save(body: ProfileFields, profile: Profile = Depends(current_profile), user: Actor = Depends(actor),
-         db: Connection = Depends(transaction)):
+def save(
+    body: ProfileFields,
+    profile: Profile = Depends(current_profile),
+    user: Actor = Depends(actor),
+    db: Connection = Depends(transaction),
+):
     profiles.edit(db, profile, body)
     return profiles.find_profile(db, user)
 
 
 @router.put("/me/availability", response_model=Profile)
-def available(body: Availability, profile: Profile = Depends(current_profile), user: Actor = Depends(actor),
-              db: Connection = Depends(transaction)):
+def available(
+    body: Availability,
+    profile: Profile = Depends(current_profile),
+    user: Actor = Depends(actor),
+    db: Connection = Depends(transaction),
+):
     profiles.availability(db, profile, body)
     return profiles.find_profile(db, user)
 
@@ -42,4 +50,4 @@ def skills(db: Connection = Depends(transaction)):
 
 @router.get("/localities", response_model=list[Place])
 def localities(db: Connection = Depends(transaction)):
-    return many(db, "SELECT id,en,hi,pin FROM localities ORDER BY en")
+    return many(db, "SELECT id,en,hi,pin FROM localities WHERE active ORDER BY en")

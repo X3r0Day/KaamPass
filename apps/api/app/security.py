@@ -1,9 +1,9 @@
-from dataclasses import dataclass
-from hashlib import sha256
 import hmac
 import re
 import secrets
 import time
+from dataclasses import dataclass
+from hashlib import sha256
 
 from fastapi import HTTPException, Request, Response
 from firebase_admin import auth
@@ -25,7 +25,10 @@ class Actor:
 
 def claims_actor(claims):
     phone = claims.get("phone_number", "")
-    if not re.fullmatch(r"\+[1-9][0-9]{7,14}", phone) or claims.get("firebase", {}).get("sign_in_provider") != "phone":
+    if (
+        not re.fullmatch(r"\+[1-9][0-9]{7,14}", phone)
+        or claims.get("firebase", {}).get("sign_in_provider") != "phone"
+    ):
         raise HTTPException(401, "phone_required")
     return Actor(claims["sub"], phone)
 
@@ -64,12 +67,16 @@ def rate_limit(bucket: str, identity: str, limit: int):
     key = hmac.new(settings().csrf_key, f"{bucket}:{identity}".encode(), sha256).hexdigest()
     period = int(time.time()) // 60
     with engine().begin() as db:
-        hits = run(db, """INSERT INTO rate_buckets AS b (key,period,hits) VALUES (:key,:period,1)
+        hits = run(
+            db,
+            """INSERT INTO rate_buckets AS b (key,period,hits) VALUES (:key,:period,1)
             ON CONFLICT (key) DO UPDATE SET period=excluded.period,
             hits=CASE WHEN b.period=excluded.period THEN b.hits+1 ELSE 1 END RETURNING hits""",
-                   key=key, period=period).scalar_one()
+            key=key,
+            period=period,
+        ).scalar_one()
         if secrets.randbelow(128) == 0:
-            run(db, "DELETE FROM rate_buckets WHERE period < :old", old=period-1440)
+            run(db, "DELETE FROM rate_buckets WHERE period < :old", old=period - 1440)
     if hits > limit:
         raise HTTPException(429, "slow_down", headers={"Retry-After": "60"})
 
@@ -81,7 +88,7 @@ def protect_write(request: Request):
         raise HTTPException(403, "origin")
     sent = request.headers.get("x-csrf-token", "")
     if not valid_csrf(sent, request.cookies.get(SESSION, "")) or not hmac.compare_digest(
-        sent, request.cookies.get(CSRF, "").encode().decode("ascii", errors="ignore")
+        sent.encode(), request.cookies.get(CSRF, "").encode()
     ):
         raise HTTPException(403, "csrf")
     client = request.client.host if request.client else "local"

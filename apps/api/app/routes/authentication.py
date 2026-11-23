@@ -1,11 +1,12 @@
-from datetime import timedelta
 import time
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from datetime import timedelta
+
+from fastapi import APIRouter, HTTPException, Request, Response
 from firebase_admin import auth
 from firebase_admin.exceptions import FirebaseError
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.security import Actor, COOKIE, CSRF, SESSION, actor, claims_actor, issue_csrf, valid_csrf
+from app.security import COOKIE, CSRF, SESSION, Actor, actor, claims_actor, issue_csrf, valid_csrf
 from app.settings import firebase_app
 
 router = APIRouter(prefix="/api/auth")

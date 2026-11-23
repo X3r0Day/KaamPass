@@ -1,17 +1,32 @@
 """Rebuild the bilingual launch catalog from a pinned India Post directory snapshot."""
+
 import csv
 import io
+import re
 from pathlib import Path
 from urllib.request import urlopen
 
-SOURCE = "https://raw.githubusercontent.com/IndiaPost/pin/9903190eb2073826f869f0c384bb83a34a21ebd5/api/v01/csv"
+SOURCE = (
+    "https://raw.githubusercontent.com/IndiaPost/pin/9903190eb2073826f869f0c384bb83a34a21ebd5/api/v01/csv"
+)
 AREAS = {
-    "301001": {"Alwar H.O": "अलवर", "Akbarpur B.O": "अकबरपुर", "Siliserh B.O": "सिलीसेढ़",
-               "Delhi Gate Alwar S.O": "दिल्ली गेट अलवर", "Umren B.O": "उमरैण", "Chandoli B.O": "चंदोली"},
-    "301022": {"Thanagazi S.O": "थानागाजी", "Kishori B.O": "किशोरी", "Suratgarh B.O": "सूरतगढ़"},
-    "301406": {"Malakhera S.O": "मालाखेड़ा", "Jamalpur B.O": "जमालपुर", "Barkhera B.O": "बरखेड़ा"},
-    "301035": {"Jatwara B.O": "जटवाड़ा", "Khoh B.O": "खोह"},
-    "301408": {"Rajgarh (Alwar) S.O": "राजगढ़ (अलवर)", "Sakat B.O": "सकट", "Machari B.O": "माचाड़ी"},
+    "201001": {
+        "Ghaziabad H.O": "गाज़ियाबाद",
+        "Nehru Nagar S.O (Ghaziabad)": "नेहरू नगर",
+        "Ashok Nagar S.O (Ghaziabad)": "अशोक नगर",
+        "Ramte Ram Road S.O": "रामते राम रोड",
+    },
+    "201005": {"Sahibabad S.O": "साहिबाबाद", "Bhopura": "भोपुरा", "Pasonda B.O": "पसौंडा"},
+    "201012": {"Vasundhra S.O": "वसुंधरा", "Kaushambi S.O": "कौशाम्बी"},
+    "201204": {
+        "Modi Nagar S.O": "मोदीनगर",
+        "Niwari B.O": "निवाड़ी",
+        "Patla B.O": "पतला",
+        "Sikri Kalan B.O": "सीकरी कलाँ",
+    },
+    "201206": {"Murad Nagar S.O (Ghaziabad)": "मुरादनगर", "Duhai B.O": "दुहाई", "Abupur B.O": "अबूपुर"},
+    "201102": {"Loni S.O": "लोनी", "Chirori B.O": "चिरोड़ी", "Mandola B.O": "मंडोला"},
+    "201014": {"Makanpur B.O": "मकनपुर", "Shipra Sun City S.O": "शिप्रा सन सिटी"},
 }
 
 
@@ -22,9 +37,9 @@ def main():
             records = {r["officename"]: r for r in csv.DictReader(io.StringIO(response.read().decode()))}
         for office, hi in translations.items():
             row = records[office]
-            assert row["Districtname"] == "Alwar" and row["pincode"] == pin
-            name = office.rsplit(" ", 1)[0]
-            slug = name.lower().replace(" (alwar)", "").replace(" ", "-")
+            assert row["Districtname"] == "Ghaziabad" and row["pincode"] == pin
+            name = re.sub(r" (?:H\.O|S\.O|B\.O)(?: \(Ghaziabad\))?$", "", office)
+            slug = name.lower().replace(" ", "-")
             output.append([f"{pin}-{slug}", name, hi, pin])
     with Path(__file__).with_name("localities.csv").open("w", newline="", encoding="utf-8") as out:
         writer = csv.writer(out, lineterminator="\n")
