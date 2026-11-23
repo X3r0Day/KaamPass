@@ -1,0 +1,19 @@
+name: kaampaas-local
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: kaampaas
+      POSTGRES_USER: kaampaas
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:?Set LOCAL_DB_PASSWORD for the local database}
+    ports:
+      - "127.0.0.1:55464:5432"
+    volumes:
+      - kaampaas-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kaampaas"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  kaampaas-db:
