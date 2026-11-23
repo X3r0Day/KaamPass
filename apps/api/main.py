@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.db.store import engine
-from app.routes import authentication
+from app.routes import authentication, profiles
 from app.security import protect_write
 from app.settings import firebase_app, settings
 
@@ -21,6 +21,7 @@ async def lifespan(app):
 app = FastAPI(title="KaamPaas", version="1.0", lifespan=lifespan,
               docs_url=None, redoc_url=None, openapi_url=None, dependencies=[Depends(protect_write)])
 app.include_router(authentication.router)
+app.include_router(profiles.router)
 
 
 @app.middleware("http")
