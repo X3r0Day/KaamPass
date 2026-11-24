@@ -3,14 +3,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { words, errors, type Word } from "@/content/words";
-import type { Lang } from "@/lib/types";
+import type { Lang, S } from "@/lib/types";
 import { pilot } from "@/content/pilot";
+import { api } from "@/lib/api";
+import { useLoad } from "@/lib/load";
+
+type HomeSession = "checking" | "signed-out" | "onboarding" | "member";
+const readSession = () => api<S["Me"]>("/me");
+const skipSession = () => Promise.resolve(null);
 
 const Language = createContext({
   lang: "en" as Lang,
   whatsapp: "",
   phoneAuth: true,
   browserRegistration: false,
+  homeSession: "signed-out" as HomeSession,
   setLang: (_l: Lang) => {
     void _l;
   },
@@ -45,7 +52,7 @@ function Mark() {
   );
 }
 function Chrome({ children }: { children: ReactNode }) {
-  const { lang, setLang, t, say, phoneAuth, whatsapp, browserRegistration } = useWords();
+  const { lang, setLang, t, say, phoneAuth, whatsapp, browserRegistration, homeSession } = useWords();
   const path = usePathname();
   return (
     <>
@@ -63,9 +70,10 @@ function Chrome({ children }: { children: ReactNode }) {
             >
               {lang === "hi" ? "English" : "हिन्दी"}
             </button>
-            {path === "/" && (phoneAuth || browserRegistration) && (
-              <Link className="headerLink" href="/login">
-                {t("signin")}
+            {path === "/" && (phoneAuth || browserRegistration) && homeSession !== "checking" && (
+              <Link className="headerLink" href={homeSession === "member" ? "/dashboard" : "/login"}>
+                {homeSession === "member" ? say("Dashboard", "डैशबोर्ड")
+                  : homeSession === "onboarding" ? say("Finish registration", "पंजीकरण पूरा करें") : t("signin")}
               </Link>
             )}
             {whatsapp ? (
@@ -112,13 +120,18 @@ export function Shell({
   browserRegistration: boolean;
 }) {
   const [lang, update] = useState(initial);
+  const path = usePathname();
+  const checkHome = path === "/" && (phoneAuth || browserRegistration);
+  const {data, err} = useLoad<S["Me"] | null>(checkHome ? readSession : skipSession);
+  const homeSession: HomeSession = !checkHome || err ? "signed-out"
+    : data?.profile ? "member" : data?.needs_onboarding ? "onboarding" : "checking";
   function setLang(l: Lang) {
     update(l);
     document.documentElement.lang = l;
     document.cookie = `kp-lang=${l}; Path=/; SameSite=Lax; Max-Age=31536000`;
   }
   return (
-    <Language.Provider value={{ lang, setLang, whatsapp, phoneAuth, browserRegistration }}>
+    <Language.Provider value={{ lang, setLang, whatsapp, phoneAuth, browserRegistration, homeSession }}>
       <Chrome>{children}</Chrome>
     </Language.Provider>
   );

@@ -5,7 +5,7 @@ import { MarketPrint } from "@/features/MarketPrint";
 import { pilot } from "@/content/pilot";
 
 export default function Home() {
-  const { t, say, lang, whatsapp, phoneAuth } = useWords();
+  const { t, say, lang, whatsapp, phoneAuth, homeSession } = useWords();
   return (
     <div className="wrap landing">
       <div className="hero">
@@ -27,7 +27,13 @@ export default function Home() {
                 {say("Start on WhatsApp", "WhatsApp पर शुरू करें")}
               </a>
             )}
-            {(phoneAuth || !whatsapp) && (
+            {homeSession === "member" && (
+              <Link className="btn primary" href="/dashboard">{say("Go to dashboard", "डैशबोर्ड खोलें")}</Link>
+            )}
+            {homeSession === "onboarding" && (
+              <Link className="btn primary" href="/login">{say("Finish registration", "पंजीकरण पूरा करें")}</Link>
+            )}
+            {homeSession === "signed-out" && (phoneAuth || !whatsapp) && (
               <>
                 <Link
                   className={`btn ${whatsapp ? "light" : "primary"}`}
@@ -40,7 +46,7 @@ export default function Home() {
                 </Link>
               </>
             )}
-            {!phoneAuth && !whatsapp && (
+            {homeSession === "signed-out" && !phoneAuth && !whatsapp && (
               <>
                 <p className="hint">{say("No SMS required.", "SMS की ज़रूरत नहीं है।")}</p>
               </>

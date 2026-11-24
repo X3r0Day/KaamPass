@@ -101,6 +101,10 @@ test("two phone accounts hire for a shift and a permanent opening",async({browse
     await signIn(worker,"worker",workerPhone);
     await expect(worker.locator(".subhead")).toContainText(id);
     await expect(worker.locator(".stats")).toContainText("₹725");
+    await worker.getByRole("link",{name:"KaamPaas",exact:true}).click();
+    await expect(worker.getByRole("navigation").getByRole("link",{name:"Dashboard",exact:true})).toHaveAttribute("href","/dashboard");
+    await expect(worker.getByRole("link",{name:"Sign in",exact:true})).toHaveCount(0);
+    await expect(worker.getByRole("link",{name:"Go to dashboard"})).toBeVisible();
   }finally{await workerContext.close();await ownerContext.close();}
 });
 
