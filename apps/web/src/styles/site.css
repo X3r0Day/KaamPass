@@ -6,6 +6,7 @@
   --color-mint: #d5e9db;
 }
 :root {
+  color-scheme: only light;
   --ink: #172e29;
   --forest: #17483e;
   --paper: #f7f9f4;
@@ -340,6 +341,42 @@ footer {
 }
 .field textarea {
   min-height: 96px;
+}
+.candidateDetails {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.field select {
+  color-scheme: only light;
+}
+.field select option,
+.field select optgroup {
+  background-color: #fff;
+  color: var(--ink);
+}
+.field select option:disabled {
+  color: var(--muted);
+}
+@supports (appearance: base-select) and selector(select::picker(select)) {
+  .field select,
+  .field select::picker(select) {
+    appearance: base-select;
+  }
+  .field select::picker(select) {
+    color-scheme: only light;
+    background-color: #fff;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 6px 16px #172e292b;
+  }
+  .field select option {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+  .field select option:where(:hover, :focus-visible):not(:disabled) {
+    background-color: var(--mint);
+  }
 }
 .checks {
   display: flex;

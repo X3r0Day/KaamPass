@@ -71,7 +71,7 @@ def interested_workers(db, profile, job, page):
     owned(db, profile, job)
     return many(
         db,
-        """SELECT p.public_id,p.area FROM interests i JOIN profiles p ON p.public_id=i.worker
+        """SELECT p.public_id,p.name,p.area FROM interests i JOIN profiles p ON p.public_id=i.worker
             WHERE i.job=:job ORDER BY i.consent_at,p.public_id LIMIT :size OFFSET :offset""",
         job=job,
         size=PAGE,

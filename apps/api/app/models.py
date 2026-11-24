@@ -128,6 +128,7 @@ class Board(BaseModel):
 
 class Candidate(BaseModel):
     public_id: str
+    name: str
     area: str
     invited: bool = False
 

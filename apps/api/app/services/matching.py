@@ -133,7 +133,7 @@ def candidates(db, profile, job, page):
     owned(db, profile, job)
     return many(
         db,
-        f"""SELECT w.public_id,w.area,EXISTS(SELECT 1 FROM invitations v WHERE v.worker=w.public_id
+        f"""SELECT w.public_id,w.name,w.area,EXISTS(SELECT 1 FROM invitations v WHERE v.worker=w.public_id
          AND v.job=j.id) AS invited {MATCH} WHERE j.id=:job AND {ELIGIBLE} AND {VISIBLE}
          ORDER BY {TIER},w.public_id LIMIT :size OFFSET :offset""",
         job=job,

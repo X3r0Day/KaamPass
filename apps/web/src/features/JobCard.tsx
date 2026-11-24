@@ -179,10 +179,12 @@ export function JobCard({
           {people.length === 0 && <p>{t("empty")}</p>}
           {people.map((p) => (
             <div className="spread" key={p.public_id}>
-              <span>
-                {p.public_id} ·{" "}
-                {cat.places.find((a) => a.id === p.area)?.[lang]}
-              </span>
+              <div className="candidateDetails">
+                <strong>{p.name}</strong>
+                <p className="hint mini">
+                  {p.public_id} · {cat.places.find((a) => a.id === p.area)?.[lang]}
+                </p>
+              </div>
               <button
                 className="btn light"
                 disabled={busy || (group === "candidates" && p.invited)}
@@ -192,8 +194,8 @@ export function JobCard({
                       group === "interests" &&
                       !window.confirm(
                         say(
-                          `Assign this opening to ${p.public_id}?`,
-                          `यह काम ${p.public_id} को सौंपें?`,
+                          `Assign this opening to ${p.name} (${p.public_id})?`,
+                          `यह काम ${p.name} (${p.public_id}) को सौंपें?`,
                         ),
                       )
                     )

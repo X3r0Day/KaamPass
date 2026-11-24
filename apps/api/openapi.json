@@ -1128,6 +1128,10 @@
             "type": "string",
             "title": "Public Id"
           },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
           "area": {
             "type": "string",
             "title": "Area"
@@ -1141,6 +1145,7 @@
         "type": "object",
         "required": [
           "public_id",
+          "name",
           "area"
         ],
         "title": "Candidate"

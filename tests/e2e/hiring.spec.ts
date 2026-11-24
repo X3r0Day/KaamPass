@@ -60,6 +60,7 @@ test("two phone accounts hire for a shift and a permanent opening",async({browse
     const listing=owner.getByRole("article").filter({hasText:shift});
     await listing.getByRole("button",{name:"Available workers"}).click();
     const person=listing.locator(".spread").filter({hasText:id});
+    await expect(person.getByText(`Worker ${n}`,{exact:true})).toBeVisible();
     await person.getByRole("button",{name:"Invite",exact:true}).click();
     await expect(person.getByRole("button",{name:"Invited"})).toBeDisabled();
     await worker.getByRole("button",{name:"Invitations",exact:true}).click();
@@ -68,6 +69,7 @@ test("two phone accounts hire for a shift and a permanent opening",async({browse
     await offer.getByRole("button",{name:"Accept invitation"}).click();
     await expect(offer.getByText("Interest sent")).toBeVisible();
     await listing.getByRole("button",{name:"Interested workers"}).click();
+    await expect(person.getByText(`Worker ${n}`,{exact:true})).toBeVisible();
     await person.getByRole("button",{name:"Assign worker"}).click();
     await listing.getByRole("button",{name:"See contact details"}).click();
     await expect(listing.getByRole("link",{name:new RegExp(`Worker ${n}`)})).toHaveAttribute("href",`tel:${workerPhone}`);

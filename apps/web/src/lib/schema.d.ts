@@ -507,6 +507,8 @@ export interface components {
         Candidate: {
             /** Public Id */
             public_id: string;
+            /** Name */
+            name: string;
             /** Area */
             area: string;
             /**
