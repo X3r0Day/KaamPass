@@ -31,7 +31,7 @@ function Fields({
   done: () => void;
   cat: Catalog;
 }) {
-  const { lang, setLang, t, say } = useWords();
+  const { lang, setLang, t, say, phoneAuth } = useWords();
   const [role, setRole] = useState(initial?.role || defaultRole),
     [name, setName] = useState(initial?.name || "");
   const [area, setArea] = useState(initial?.area || ""),
@@ -94,7 +94,7 @@ function Fields({
   return (
     <>
       <p className="subhead">
-        {initial?.public_id || say("Phone verified", "नंबर सत्यापित")}
+        {initial?.public_id || (phoneAuth ? say("Phone verified", "नंबर सत्यापित") : say("Registration", "पंजीकरण"))}
       </p>
       <h1>
         {review
