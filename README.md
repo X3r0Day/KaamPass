@@ -1,5 +1,7 @@
 # KaamPaas
 
+[Live site](https://kaampaas-ashen.vercel.app) · [Public source repository](https://github.com/X3r0Day/KaamPass)
+
 KaamPaas connects workers and small employers in **Uttar Pradesh**. Find short-term work or a permanent job by trade, locality, and postal PIN. Sign in with an SMS code; use the site in English or हिन्दी. The launch catalog covers 21 areas across seven PINs.
 
 - Workers choose when employers can find them, accept invitations, and see their applications and reported earnings.
@@ -84,7 +86,7 @@ WhatsApp and the website use the same profile/public ID and job tables. A second
 
 ### Deploy the website
 
-1. Import the **private** GitHub repository, `X3r0Day/delhi4`, with the repository root as the Vercel project root. `vercel.json` deploys `apps/web` and `apps/api` as separate services under one HTTPS hostname. Select Node 24. Keep `/api/(.*)` routed before the catch-all.
+1. Import the public GitHub repository, [`X3r0Day/KaamPass`](https://github.com/X3r0Day/KaamPass), with the repository root as the Vercel project root. `vercel.json` deploys `apps/web` and `apps/api` as separate services under one HTTPS hostname. Select Node 24. Keep `/api/(.*)` routed before the catch-all. The existing Vercel project is `kaampaas`; its live URL is independent of the GitHub repository name.
 2. Use separate Neon databases or branches. Keep website SMS off for a WhatsApp-only release. **If enabling website SMS later**, create separate production and staging Firebase projects, set `WEB_PHONE_AUTH_ENABLED=true`, enable Phone Auth and Blaze billing, authorize only the corresponding stable domains, and allow India in the SMS region policy. Configure Cloud Speech-to-Text and Text-to-Speech separately and set budgets/alerts.
 3. Set the variables below in the appropriate environments. Scope preview credentials to preview/staging data, not production. Apply migrations once before promotion. For the first deployment, configure protected approvals for the GitHub `production` environment and set its `MIGRATION_DATABASE_URL` secret. Run **Checks** manually on `main` to apply migrations after test success and approval. For subsequent releases, use backward-compatible migrations; apply them before promoting the build that uses them. A Vercel rollback does not roll back the schema.
 4. On a preview domain, check `/api/health`, webhook verification, WhatsApp registration and both types of posting with real business messaging and speech configured. If website SMS is enabled later, verify sign-in, the same-origin cookie, and the Hindi and English recording/readback flows on Android Chrome and iOS Safari. Monitor delivery, error rates, quotas, and backups.
