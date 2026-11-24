@@ -8,7 +8,7 @@ import { PhoneLogin } from "./PhoneLogin";
 import { ProfileForm } from "./ProfileForm";
 import { Failure, Loading } from "./Common";
 import { useWords } from "./Shell";
-import { HackathonRegistration } from "./HackathonRegistration";
+import { BrowserRegistration } from "./BrowserRegistration";
 const me = () => api<S["Me"]>("/me");
 const disabled = () => Promise.resolve(null);
 export function Account({
@@ -18,10 +18,10 @@ export function Account({
   intent?: Profile["role"];
   edit?: boolean;
 }) {
-  const { say, t, whatsapp, phoneAuth } = useWords();
+  const { say, t, whatsapp, phoneAuth, browserRegistration } = useWords();
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<unknown>();
-  const state = useLoad<S["Me"] | null>(phoneAuth ? me : disabled),
+  const state = useLoad<S["Me"] | null>(phoneAuth || browserRegistration ? me : disabled),
     router = useRouter();
   const signedOut = state.err instanceof ApiError && state.err.status === 401;
   useEffect(() => {
@@ -30,9 +30,9 @@ export function Account({
     if (!edit && state.data?.profile) router.replace("/dashboard");
   }, [edit, signedOut, state.data, router]);
   let body;
-  if (!phoneAuth && !whatsapp)
-    body = <HackathonRegistration intent={intent} />;
-  else if (!phoneAuth)
+  if (signedOut && !edit && !phoneAuth && browserRegistration)
+    body = <BrowserRegistration done={state.reload} />;
+  else if (!phoneAuth && !browserRegistration)
     body = (
       <div className="stack">
         <h1>

@@ -149,6 +149,10 @@ export function Dashboard() {
     );
   const p = data.profile,
     owner = p.role === "employer";
+  const areaLabel = (id: string) => {
+    const place = cat.places.find(a => a.id === id);
+    return place ? `${place[lang]} (${place.pin})` : id;
+  };
   return (
     <div className="workspace wrap">
       <div className="spread">
@@ -163,11 +167,20 @@ export function Dashboard() {
             {t("edit")}
           </Link>
           <button className="link" onClick={signout}>
-            {t("signout")}
+            {p.realm === "browser" ? say("Sign out of this browser", "इस ब्राउज़र से साइन आउट") : t("signout")}
           </button>
         </div>
       </div>
       {err != null && <Failure value={err} />}
+      <section className="panel stack" aria-label={say("Profile details", "प्रोफ़ाइल विवरण")}>
+        <h2>{say("Profile details", "प्रोफ़ाइल विवरण")}</h2>
+        <p><strong>{t("area")}:</strong> {areaLabel(p.area)}</p>
+        {!owner && <>
+          <p><strong>{t("trade")}:</strong> {p.skills?.map(id => cat.skills.find(s => s.id === id)?.[lang] || id).join(", ")}</p>
+          <p><strong>{t("selectTypes")}:</strong> {p.kinds?.map(t).join(", ")}</p>
+          {!!p.areas?.length && <p><strong>{say("Other work areas", "अन्य कार्य क्षेत्र")}:</strong> {p.areas.map(areaLabel).join(", ")}</p>}
+        </>}
+      </section>
       <div className="stats">
         {(owner
           ? [
@@ -238,6 +251,7 @@ export function Dashboard() {
           key={j.id}
           j={j}
           owner={owner}
+          browserAccount={p.realm === "browser"}
           cat={cat}
           refresh={board.reload}
         />

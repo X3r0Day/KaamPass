@@ -7,7 +7,7 @@ from app.db.store import many, one, run, transaction
 from app.models import Availability, Onboarding, Profile, ProfileFields, today
 from app.security import Actor, actor
 
-PUBLIC_FIELDS = """p.public_id,p.name,p.role,p.lang,p.area,p.kinds,
+PUBLIC_FIELDS = """p.public_id,p.name,p.role,p.lang,p.area,p.kinds,p.realm,
     (p.discoverable AND (p.discoverable_until IS NULL OR p.discoverable_until>=:today)) AS discoverable,
     p.discoverable_until,ARRAY(SELECT skill FROM worker_skills WHERE worker=p.public_id ORDER BY skill) AS skills,
     ARRAY(SELECT area FROM worker_work_areas WHERE worker=p.public_id ORDER BY area) AS areas"""
@@ -38,7 +38,9 @@ def reuse_confirmed_profile(db, user: Actor):
     current = find_profile(db, user)
     if current:
         return current
-    if not one(db, "SELECT 1 FROM profiles WHERE phone=:phone", phone=user.phone):
+    if user.provider == "browser" or not one(
+        db, "SELECT 1 FROM profiles WHERE phone=:phone AND realm='member'", phone=user.phone
+    ):
         raise HTTPException(404, "not_found")
     bind(db, user)
     return find_profile(db, user)
@@ -106,11 +108,12 @@ def register(db, user: Actor, fields: Onboarding):
         pid = f"{prefix}-{secrets.randbelow(900000) + 100000}"
         row = one(
             db,
-            """INSERT INTO profiles(phone,public_id,role,name,lang,area,kinds)
-             VALUES (:phone,:id,:role,:name,:lang,:area,:kinds)
+            """INSERT INTO profiles(phone,public_id,role,name,lang,area,kinds,realm)
+              VALUES (:phone,:id,:role,:name,:lang,:area,:kinds,:realm)
              ON CONFLICT (public_id) DO NOTHING RETURNING public_id""",
             phone=user.phone,
             id=pid,
+            realm="browser" if user.provider == "browser" else "member",
             **fields.model_dump(),
         )
         if row:

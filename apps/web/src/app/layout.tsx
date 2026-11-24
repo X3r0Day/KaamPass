@@ -31,13 +31,14 @@ export default async function Layout({
       process.env.WEB_PHONE_AUTH_ENABLED ??
       (process.env.VERCEL ? "false" : "true")
     ).toLowerCase() === "true";
+  const browserRegistration = (process.env.BROWSER_REGISTRATION_ENABLED ?? (process.env.VERCEL ? "true" : "false")).toLowerCase() === "true";
   return (
     <html lang={lang}>
       <body>
         <a className="skip" href="#main">
           {lang === "hi" ? "मुख्य सामग्री" : "Skip to content"}
         </a>
-        <Shell initial={lang} whatsapp={whatsapp} phoneAuth={phoneAuth}>
+        <Shell initial={lang} whatsapp={whatsapp} phoneAuth={phoneAuth} browserRegistration={browserRegistration}>
           {children}
         </Shell>
       </body>

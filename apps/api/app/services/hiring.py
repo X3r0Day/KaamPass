@@ -117,7 +117,7 @@ def contact(db, profile, job):
         job=job,
         me=profile.public_id,
     )
-    if not partner:
+    if not partner or partner["phone"].startswith("+999"):
         raise HTTPException(404, "not_found")
     return partner
 

@@ -77,6 +77,44 @@
         }
       }
     },
+    "/api/auth/browser": {
+      "post": {
+        "summary": "Browser",
+        "operationId": "browser_api_auth_browser_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowserCode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfToken"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/me": {
       "get": {
         "summary": "Me",
@@ -1069,6 +1107,21 @@
         ],
         "title": "Board"
       },
+      "BrowserCode": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "BrowserCode"
+      },
       "Candidate": {
         "properties": {
           "public_id": {
@@ -1660,6 +1713,15 @@
           "public_id": {
             "type": "string",
             "title": "Public Id"
+          },
+          "realm": {
+            "type": "string",
+            "enum": [
+              "member",
+              "browser"
+            ],
+            "title": "Realm",
+            "default": "member"
           },
           "discoverable": {
             "type": "boolean",

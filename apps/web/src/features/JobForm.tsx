@@ -132,7 +132,7 @@ export function JobForm({
                 checked={agree}
                 onChange={(e) => consent(e.target.checked)}
               />
-              {t("share")}
+              {profile.realm === "browser" ? say("Confirm these details are ready to publish.", "पुष्टि करें कि ये विवरण प्रकाशित करने के लिए तैयार हैं।") : t("share")}
             </label>
           </>
         ) : (

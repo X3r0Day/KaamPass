@@ -10,6 +10,7 @@ COLUMNS = """j.id,j.employer,j.skill,j.area,j.kind,j.starts,j.ends,j.shift_time,
              j.pay,j.unit,j.title,j.description,j.state,j.created_at"""
 MATCH = """FROM profiles w JOIN worker_skills ws ON ws.worker=w.public_id
     JOIN jobs j ON j.skill=ws.skill AND j.kind=ANY(w.kinds)
+    JOIN profiles employer_profile ON employer_profile.public_id=j.employer AND employer_profile.realm=w.realm
     JOIN localities home ON home.id=w.area JOIN localities site ON site.id=j.area
     LEFT JOIN worker_work_areas extra ON extra.worker=w.public_id AND extra.area=j.area"""
 ELIGIBLE = """j.state='open' AND site.active AND j.deadline>=:today AND w.role='worker'

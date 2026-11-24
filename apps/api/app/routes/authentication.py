@@ -6,7 +6,18 @@ from firebase_admin import auth
 from firebase_admin.exceptions import FirebaseError
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.security import COOKIE, CSRF, SESSION, Actor, actor, claims_actor, issue_csrf, valid_csrf
+from app.security import (
+    COOKIE,
+    CSRF,
+    SESSION,
+    Actor,
+    actor,
+    browser_enabled,
+    claims_actor,
+    issue_csrf,
+    new_browser_cookie,
+    valid_csrf,
+)
 from app.settings import firebase_app, settings
 
 router = APIRouter(prefix="/api/auth")
@@ -19,6 +30,11 @@ class Exchange(BaseModel):
 
 class CsrfToken(BaseModel):
     token: str
+
+
+class BrowserCode(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(pattern=r"^[0-9]{6}$")
 
 
 @router.get("/csrf", response_model=CsrfToken)
@@ -53,8 +69,24 @@ def logout(response: Response, request: Request):
         user: Actor = actor(request)
     except HTTPException:
         user = None
-    if user:
+    if user and user.provider == "firebase":
         auth.revoke_refresh_tokens(user.uid, app=firebase_app())
     for name in (SESSION, CSRF):
         response.delete_cookie(name, **COOKIE)
     return {"ok": True}
+
+
+@router.post("/browser", response_model=CsrfToken)
+def browser(body: BrowserCode, request: Request, response: Response):
+    if not browser_enabled():
+        raise HTTPException(404, "not_found")
+    incoming = request.cookies.get(SESSION, "")
+    try:
+        user = actor(request)
+    except HTTPException:
+        user = None
+    if user:
+        return {"token": issue_csrf(response, incoming)}
+    cookie = new_browser_cookie()
+    response.set_cookie(SESSION, cookie, max_age=86400, **COOKIE)
+    return {"token": issue_csrf(response, cookie)}

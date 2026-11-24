@@ -10,6 +10,7 @@ const Language = createContext({
   lang: "en" as Lang,
   whatsapp: "",
   phoneAuth: true,
+  browserRegistration: false,
   setLang: (_l: Lang) => {
     void _l;
   },
@@ -44,7 +45,7 @@ function Mark() {
   );
 }
 function Chrome({ children }: { children: ReactNode }) {
-  const { lang, setLang, t, say, phoneAuth, whatsapp } = useWords();
+  const { lang, setLang, t, say, phoneAuth, whatsapp, browserRegistration } = useWords();
   const path = usePathname();
   return (
     <>
@@ -62,7 +63,7 @@ function Chrome({ children }: { children: ReactNode }) {
             >
               {lang === "hi" ? "English" : "हिन्दी"}
             </button>
-            {path === "/" && phoneAuth && (
+            {path === "/" && (phoneAuth || browserRegistration) && (
               <Link className="headerLink" href="/login">
                 {t("signin")}
               </Link>
@@ -102,11 +103,13 @@ export function Shell({
   children,
   whatsapp,
   phoneAuth,
+  browserRegistration,
 }: {
   initial: Lang;
   children: ReactNode;
   whatsapp: string;
   phoneAuth: boolean;
+  browserRegistration: boolean;
 }) {
   const [lang, update] = useState(initial);
   function setLang(l: Lang) {
@@ -115,7 +118,7 @@ export function Shell({
     document.cookie = `kp-lang=${l}; Path=/; SameSite=Lax; Max-Age=31536000`;
   }
   return (
-    <Language.Provider value={{ lang, setLang, whatsapp, phoneAuth }}>
+    <Language.Provider value={{ lang, setLang, whatsapp, phoneAuth, browserRegistration }}>
       <Chrome>{children}</Chrome>
     </Language.Provider>
   );

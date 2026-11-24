@@ -21,11 +21,13 @@ export function JobCard({
   j,
   cat,
   owner,
+  browserAccount,
   refresh,
 }: {
   j: Job;
   cat: Catalog;
   owner: boolean;
+  browserAccount: boolean;
   refresh: () => void;
 }) {
   const { t, say, lang } = useWords(),
@@ -111,7 +113,7 @@ export function JobCard({
               checked={consent}
               onChange={(e) => agree(e.target.checked)}
             />
-            {t("share")}
+            {browserAccount ? say("Confirm that you’re interested in this opening.", "पुष्टि करें कि इस काम में आपकी रुचि है।") : t("share")}
           </label>
           <div className="row">
             {waitingInvite ? (
@@ -236,7 +238,7 @@ export function JobCard({
           </div>
         </div>
       )}
-      {j.state === "assigned" && (owner || j.selected) && (
+      {!browserAccount && j.state === "assigned" && (owner || j.selected) && (
         <div className="row">
           <button
             className="btn light"

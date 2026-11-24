@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/browser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Browser */
+        post: operations["browser_api_auth_browser_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -481,6 +498,11 @@ export interface components {
             /** More */
             more: boolean;
         };
+        /** BrowserCode */
+        BrowserCode: {
+            /** Code */
+            code: string;
+        };
         /** Candidate */
         Candidate: {
             /** Public Id */
@@ -716,6 +738,12 @@ export interface components {
             role: "worker" | "employer";
             /** Public Id */
             public_id: string;
+            /**
+             * Realm
+             * @default member
+             * @enum {string}
+             */
+            realm: "member" | "browser";
             /** Discoverable */
             discoverable: boolean;
             /** Discoverable Until */
@@ -943,6 +971,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    browser_api_auth_browser_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BrowserCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CsrfToken"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

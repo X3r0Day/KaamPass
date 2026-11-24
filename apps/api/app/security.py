@@ -1,4 +1,5 @@
 import hmac
+import os
 import re
 import secrets
 import time
@@ -36,6 +37,15 @@ def claims_actor(claims):
 
 def actor(request: Request) -> Actor:
     cookie = request.cookies.get(SESSION)
+    if cookie and cookie.startswith("browser."):
+        match = re.fullmatch(r"browser\.([a-f0-9]{32})\.([0-9]{12})\.([0-9]{10})\.([0-9a-f]{64})", cookie)
+        if match and browser_enabled():
+            uid, number, expiry, mac = match.groups()
+            if int(expiry) > time.time() and hmac.compare_digest(
+                mac, browser_signature(f"{uid}.{number}.{expiry}")
+            ):
+                return Actor(uid, "+999" + number, "browser")
+        raise HTTPException(401, "sign_in")
     if not cookie or not settings().phone_auth_enabled:
         raise HTTPException(401, "sign_in")
     try:
@@ -43,6 +53,22 @@ def actor(request: Request) -> Actor:
     except (FirebaseError, ValueError):
         raise HTTPException(401, "sign_in") from None
     return claims_actor(claims)
+
+
+def browser_enabled():
+    return (
+        os.getenv("BROWSER_REGISTRATION_ENABLED", "true" if os.getenv("VERCEL") else "false").lower()
+        == "true"
+    )
+
+
+def browser_signature(value):
+    return hmac.new(settings().csrf_key, ("browser-session:" + value).encode(), sha256).hexdigest()
+
+
+def new_browser_cookie():
+    value = f"{secrets.token_hex(16)}.{secrets.randbelow(10**12):012d}.{int(time.time()) + 86400}"
+    return f"browser.{value}.{browser_signature(value)}"
 
 
 def signature(nonce: str, session: str) -> str:
@@ -97,5 +123,5 @@ def protect_write(request: Request):
     client = request.client.host if request.client else "local"
     if not settings().local:
         client = request.headers.get("x-vercel-forwarded-for", client).split(",")[0].strip()
-    login = request.url.path == "/api/auth/session"
+    login = request.url.path in {"/api/auth/session", "/api/auth/browser"}
     rate_limit("login" if login else "write", client, 12 if login else 90)

@@ -36,6 +36,8 @@ def settings():
     if not local and (project.startswith("demo-") or os.getenv("NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL")):
         raise RuntimeError("Emulator settings are disabled on deployments")
     origins = frozenset(s.strip() for s in os.environ["WEB_ORIGINS"].split(","))
+    if os.getenv("VERCEL") and (domain := os.getenv("VERCEL_PROJECT_PRODUCTION_URL")):
+        origins |= {f"https://{domain}"}
     for origin in origins:
         parsed = urlsplit(origin)
         if (

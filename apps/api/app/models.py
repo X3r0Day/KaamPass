@@ -51,6 +51,7 @@ class Onboarding(ProfileFields):
 
 class Profile(Onboarding):
     public_id: str
+    realm: Literal["member", "browser"] = "member"
     discoverable: bool
     discoverable_until: date | None
 

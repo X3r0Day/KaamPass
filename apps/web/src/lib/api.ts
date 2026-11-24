@@ -43,7 +43,7 @@ export async function api<T>(
       typeof body.detail === "string" ? body.detail : "connection",
     );
   }
-  if (path === "/auth/session") csrf = Promise.resolve(body.token);
+  if (path === "/auth/session" || path === "/auth/browser") csrf = Promise.resolve(body.token);
   if (path === "/auth/logout") csrf = undefined;
   return body as T;
 }
