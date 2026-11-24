@@ -1,6 +1,6 @@
 # KaamPaas
 
-KaamPaas connects workers and small employers in **Ghaziabad district, Uttar Pradesh**. Find short-term work or a permanent job by trade, locality, and postal PIN. Sign in with an SMS code; use the site in English or हिन्दी. The launch catalog covers 21 areas across seven PINs.
+KaamPaas connects workers and small employers in **Uttar Pradesh**. Find short-term work or a permanent job by trade, locality, and postal PIN. Sign in with an SMS code; use the site in English or हिन्दी. The launch catalog covers 21 areas across seven PINs.
 
 - Workers choose when employers can find them, accept invitations, and see their applications and reported earnings.
 - Employers publish openings, invite eligible workers, and close assignments as completed work or permanent hires.
